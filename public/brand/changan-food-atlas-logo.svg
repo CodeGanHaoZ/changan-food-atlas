@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="112" viewBox="0 0 440 112" role="img" aria-labelledby="title desc">
+  <title id="title">长安食游图鉴</title>
+  <desc id="desc">钟楼屋脊与食器组合的长安食游图鉴印记</desc>
+  <rect width="440" height="112" fill="#050807"/>
+  <g transform="translate(12 12)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0 0h88v88H0z" stroke="#b52f35" stroke-width="2"/>
+    <path d="M16 30v-8h9v5h7v-5h8v5h7v-5h9v8M14 33h60M20 33v13m32-13v13M27 31v15m18-15v15" stroke="#d7a855" stroke-width="3"/>
+    <circle cx="44" cy="34" r="6" stroke="#d64545" stroke-width="2"/>
+    <path d="M16 48h56c-3 8-10 12-28 12S19 56 16 48Zm8 0v-5h40v5" stroke="#f2d49b" stroke-width="3"/>
+    <path d="M16 16h8m32 0h8" stroke="#d64545" stroke-width="3"/>
+  </g>
+  <text x="126" y="58" fill="#f7f2e6" font-family="Noto Serif SC, STSong, serif" font-size="34" font-weight="600">长安食游图鉴</text>
+  <text x="129" y="84" fill="#d7a855" font-family="Arial, sans-serif" font-size="12" letter-spacing="5">XI'AN FOOD ATLAS</text>
+</svg>

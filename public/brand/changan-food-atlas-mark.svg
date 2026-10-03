@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 72 72" role="img" aria-labelledby="title desc">
+  <title id="title">长安食游图鉴印记</title>
+  <desc id="desc">钟楼屋脊、城墙垛口和食器轮廓组成的方印</desc>
+  <rect width="72" height="72" fill="#050807"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 9h54v54H9z" stroke="#b52f35" stroke-width="1.5"/>
+    <path d="M16 30v-8h9v5h7v-5h8v5h7v-5h9v8M14 33h44M20 33v13m32-13v13M27 31v15m18-15v15" stroke="#d7a855" stroke-width="1.8"/>
+    <circle cx="36" cy="34" r="6" stroke="#d64545" stroke-width="1.8"/>
+    <path d="M16 48h40c-3 8-10 12-20 12S19 56 16 48Zm8 0v-5h24v5M16 16h8m24 0h8" stroke="#f2d49b" stroke-width="1.8"/>
+  </g>
+</svg>

@@ -10,9 +10,9 @@ export const dishes = [
 ]
 
 export const places = [
-  { id: 1, name: '洒金桥巷口', type: '巷子小店', area: '莲湖区 · 洒金桥', dish: '凉皮 / 肉夹馍', price: '人均 ¥25', mode: '边走边吃', status: '演示营业中', distance: '1.2 km', score: '4.7', risk: '演示风险：晚间排队约 15 分钟', sourceIds: ['seed-place-sajinqiao'] },
-  { id: 2, name: '钟楼西侧食集', type: '美食街', area: '钟楼商圈', dish: '甑糕 / 灌汤包 / 凉皮', price: '人均 ¥45', mode: '街区串联', status: '演示营业中', distance: '0.8 km', score: '4.5', risk: '演示风险：周末客流较高', sourceIds: ['seed-place-bell'] },
-  { id: 3, name: '城墙根面馆', type: '社区餐馆', area: '碑林区 · 城墙南门', dish: '油泼面 / 臊子面', price: '人均 ¥28', mode: '坐下慢吃', status: '演示营业中', distance: '2.1 km', score: '4.8', risk: '演示风险：14:00–17:00 午间休息', sourceIds: ['seed-place-wall'] },
+  { id: 1, name: '洒金桥巷口', type: '巷子小店', area: '莲湖区 · 洒金桥', dish: '凉皮 / 肉夹馍', price: '人均 ¥25', mode: '边走边吃', status: '演示营业中', distance: '1.2 km', score: '4.7', risk: '演示风险：晚间排队约 15 分钟', longitude: 108.9346, latitude: 34.2664, sourceIds: ['seed-place-sajinqiao'] },
+  { id: 2, name: '钟楼西侧食集', type: '美食街', area: '钟楼商圈', dish: '甑糕 / 灌汤包 / 凉皮', price: '人均 ¥45', mode: '街区串联', status: '演示营业中', distance: '0.8 km', score: '4.5', risk: '演示风险：周末客流较高', longitude: 108.9398, latitude: 34.2612, sourceIds: ['seed-place-bell'] },
+  { id: 3, name: '城墙根面馆', type: '社区餐馆', area: '碑林区 · 城墙南门', dish: '油泼面 / 臊子面', price: '人均 ¥28', mode: '坐下慢吃', status: '演示营业中', distance: '2.1 km', score: '4.8', risk: '演示风险：14:00–17:00 午间休息', longitude: 108.9403, latitude: 34.2485, sourceIds: ['seed-place-wall'] },
 ]
 
 export const sources = [

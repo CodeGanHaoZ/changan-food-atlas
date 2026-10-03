@@ -20,7 +20,7 @@ npm run preview
 
 - React 18 + Vite：页面脚手架和交互状态。
 - Three.js / React Three Fiber / Drei：程序化 3D 菜品场景、灯光和旋转控制。
-- Iconify MingCute：所有功能图标统一使用 MingCute 线性图标。
+- Iconify MingCute：所有功能图标统一使用 MingCute 线性图标，并通过 `@iconify-json/mingcute` 本地注册，避免图标依赖外网。
 - 原生 CSS Tokens：墨底、朱砂、鎏金、宣纸四色体系，以及响应式布局。
 - 本地 seed + source registry：断网可演示，字段为后续真实数据接入预留来源和时间戳。
 
@@ -34,6 +34,7 @@ src/services/atlasApi.js  菜品/地点/来源查询适配器
 src/services/agentApi.js  自然语言解析适配器与规则回退
 src/services/routeApi.js  确定性路线、预算和风险计算
 public/motifs/            长安墨朱砂西安纹样
+public/brand/             长安食游图鉴 Logo 资产
 ```
 
 ## 主流程
@@ -64,6 +65,8 @@ public/motifs/            长安墨朱砂西安纹样
 ## 视觉规范
 
 页面遵循 `changan-ink-ui`：墨色背景、朱砂强调、鎏金细线、宣纸正文、MingCute 图标、低透明度西安纹样、可见键盘焦点态和 `prefers-reduced-motion` 降级。
+
+Logo 使用“钟楼屋脊 + 食器碗形 + 印章方框”的组合，源文件位于 `public/brand/changan-food-atlas-logo.svg`；页面头部和页脚使用同一套内联路径，保证缩放时清晰。
 
 ## 已知限制
 
