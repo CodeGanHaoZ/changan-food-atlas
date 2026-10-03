@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" fill="none" role="img" aria-label="盛唐宝相花">
+  <!--
+    盛唐宝相花 · Tang Dynasty Baoxiang Floral Medallion
+    用途：品牌徽记、荣誉区底纹、票券水印、卡片角花
+    用法：单色描边（currentColor）；八瓣由同一路径旋转 45° 生成
+    注意：作背景时 opacity ≤ 0.12，作主视觉时可用 var(--gold-600)
+  -->
+  <defs>
+    <!-- 外圈大瓣：radial 16 → 47 -->
+    <path id="bx-outer" d="M50 3C41 16 38 26 50 34C62 26 59 16 50 3Z"/>
+    <!-- 内圈小瓣：radial 8 → 28 -->
+    <path id="bx-inner" d="M50 22C45 29 43 37 50 42C57 37 55 29 50 22Z"/>
+  </defs>
+
+  <!-- 外圈 8 瓣 -->
+  <g stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">
+    <use href="#bx-outer"/>
+    <use href="#bx-outer" transform="rotate(45 50 50)"/>
+    <use href="#bx-outer" transform="rotate(90 50 50)"/>
+    <use href="#bx-outer" transform="rotate(135 50 50)"/>
+    <use href="#bx-outer" transform="rotate(180 50 50)"/>
+    <use href="#bx-outer" transform="rotate(225 50 50)"/>
+    <use href="#bx-outer" transform="rotate(270 50 50)"/>
+    <use href="#bx-outer" transform="rotate(315 50 50)"/>
+  </g>
+
+  <!-- 内圈 8 瓣（错位 22.5°） -->
+  <g stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" opacity="0.75">
+    <use href="#bx-inner" transform="rotate(22.5 50 50)"/>
+    <use href="#bx-inner" transform="rotate(67.5 50 50)"/>
+    <use href="#bx-inner" transform="rotate(112.5 50 50)"/>
+    <use href="#bx-inner" transform="rotate(157.5 50 50)"/>
+    <use href="#bx-inner" transform="rotate(202.5 50 50)"/>
+    <use href="#bx-inner" transform="rotate(247.5 50 50)"/>
+    <use href="#bx-inner" transform="rotate(292.5 50 50)"/>
+    <use href="#bx-inner" transform="rotate(337.5 50 50)"/>
+  </g>
+
+  <!-- 花心 -->
+  <circle cx="50" cy="50" r="5" fill="currentColor"/>
+  <circle cx="50" cy="50" r="9.5" stroke="currentColor" stroke-width="1.1" opacity="0.55"/>
+</svg>

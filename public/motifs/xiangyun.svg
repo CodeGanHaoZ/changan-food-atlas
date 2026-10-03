@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 48" width="96" height="48" fill="none" role="img" aria-label="祥云纹">
+  <!--
+    祥云纹 · Auspicious Cloud Scroll
+    用途：标题左右点缀、按钮装饰、悬浮元素、空状态
+    用法：单色描边（currentColor）；建议 stroke-width 2.2–3
+    亦可作 CSS mask-image 生成云纹裁切
+  -->
+  <g stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 主云头：三重卷曲 -->
+    <path d="M8 40c0-7 6-13 13-13 1-7 9-11 15-7 3-6 12-5 14 2 7-1 13 5 12 12"/>
+    <!-- 云脚回卷 -->
+    <path d="M62 34c6 0 10 5 9 10-1 4-6 6-11 4"/>
+    <!-- 右侧小云 -->
+    <path d="M74 40c0-5 4-9 9-9 1-4 6-6 9-4"/>
+    <!-- 云气拖尾 -->
+    <path d="M20 40h14" opacity="0.5"/>
+  </g>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 24" width="96" height="24" fill="none" role="img" aria-label="城墙垛口分隔线">
+  <!--
+    城墙垛口分隔条 · City Wall Crenellation Divider
+    用途：区块之间的水平装饰线，隐喻西安明城墙
+    用法：width="100%" height="24" preserveAspectRatio="none"（横向拉伸不形变）
+    颜色：跟随 currentColor（建议 var(--gold-600) 或 var(--cinnabar-700)）
+  -->
+  <path d="M0 6h12v18H0zM24 6h12v18H24zM48 6h12v18H48zM72 6h12v18H72z" fill="currentColor" opacity="0.85"/>
+  <path d="M0 22.75h96" stroke="currentColor" stroke-width="2.5"/>
+</svg>
