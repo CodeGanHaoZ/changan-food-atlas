@@ -193,6 +193,8 @@ button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px sol
 .detail-visual { min-height: 530px; background: radial-gradient(circle at 50% 45%, rgba(181,47,53,.18), transparent 62%), var(--ink-200); }.detail-body { padding: 42px 38px; }.detail-body h2, .source-modal h2 { margin: 12px 0 8px; color: var(--paper-000); font-family: var(--font-serif); font-size: 42px; font-weight: 600; line-height: 1.2; }.detail-note { color: var(--color-text-muted); font-size: 14px; }.detail-block { margin-top: 26px; padding-top: 18px; border-top: var(--border-hairline); }.detail-block h4 { margin: 0 0 8px; color: var(--gold-600); font-family: var(--font-serif); font-size: 17px; }.detail-block p { margin: 0; color: var(--color-text-muted); font-size: 13px; line-height: 1.75; }.ingredient-list { display: flex; flex-wrap: wrap; gap: 8px; }.ingredient-list span { display: inline-flex; align-items: center; gap: 6px; color: var(--paper-100); font-size: 12px; }.ingredient-list i { width: 5px; height: 5px; border-radius: 50%; background: var(--cinnabar-400); }
 .modal-close { position: absolute; top: 16px; right: 16px; z-index: 2; display: grid; place-items: center; width: 40px; height: 40px; border: var(--border-hairline); border-radius: 50%; color: var(--paper-400); background: rgba(5,8,7,.5); }.modal-close:hover { color: var(--paper-000); border-color: var(--gold-600); }
 .source-modal { display: block; width: min(600px, 100%); padding: 42px; }.source-modal h2 { font-size: 34px; }.source-modal > p { color: var(--color-text-muted); font-size: 13px; }.source-list { margin-top: 28px; border-top: var(--border-hairline); }.source-list > div { display: flex; align-items: center; gap: 12px; padding: 16px 0; border-bottom: var(--border-hairline); }.source-list svg { color: var(--gold-600); }.source-list span { flex: 1; }.source-list b { display: block; color: var(--paper-100); font-size: 13px; font-weight: 600; }.source-list small { display: block; margin-top: 2px; color: var(--paper-500); font-size: 11px; }.source-list em { color: var(--paper-500); font-family: var(--font-mono); font-size: 10px; font-style: normal; }
+.detail-source-note { margin: 10px 0 0; color: var(--paper-500); font-size: 10px; line-height: 1.7; }
+.detail-source-note a { color: var(--gold-600); text-decoration: underline; text-decoration-color: var(--gold-700); text-underline-offset: 3px; }
 
 /* 滚动渐入 */
 [data-reveal] { opacity: 0; transform: translateY(26px); transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out); transition-delay: var(--reveal-delay, 0ms); }
@@ -263,9 +265,6 @@ button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px sol
 .carousel-arrow:hover { color: var(--paper-000); border-color: var(--gold-600); background: rgba(8, 11, 10, .8); }
 .carousel-arrow-prev { left: 12px; }
 .carousel-arrow-next { right: 12px; }
-.carousel-dots { position: absolute; bottom: 14px; left: 50%; z-index: 3; display: flex; gap: 7px; transform: translateX(-50%); }
-.carousel-dots button { width: 6px; height: 6px; padding: 0; border: none; border-radius: 50%; background: rgba(243, 233, 210, .3); cursor: pointer; transition: background .25s, transform .25s; }
-.carousel-dots button.is-active { background: var(--gold-600); transform: scale(1.35); }
 .stage-label b { margin-left: 6px; color: var(--paper-400); font-weight: 400; }
 
 /* 「寻一程」跳转后面板高亮闪烁 */
@@ -403,6 +402,10 @@ button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px sol
 .flat-filling { fill: var(--dish-accent); stroke: var(--ink-500); stroke-width: 3; }
 .flat-bowl { fill: var(--dish-tone); stroke: color-mix(in srgb, var(--dish-tone), var(--paper-000) 18%); stroke-width: 3; }
 .flat-soup { fill: var(--dish-accent); stroke: var(--ink-500); stroke-width: 3; }
+.flat-meatball { fill: var(--dish-tone); stroke: var(--paper-100); stroke-width: 2; }
+.flat-vegetable { fill: var(--jade-500); stroke: var(--ink-500); stroke-width: 2; }
+.flat-chicken { fill: var(--dish-tone); stroke: color-mix(in srgb, var(--dish-tone), var(--paper-000) 22%); stroke-width: 3; }
+.flat-chicken-leg { fill: none; stroke: var(--dish-accent); stroke-width: 7; stroke-linecap: round; }
 .flat-sweet-layer { fill: none; stroke: var(--dish-accent); stroke-width: 7; stroke-linecap: round; opacity: .88; }
 .flat-noodle, .flat-detail { fill: none; stroke: var(--paper-000); stroke-width: 6; stroke-linecap: round; opacity: .78; }
 .flat-garnish { fill: var(--cinnabar-400); stroke: var(--paper-100); stroke-width: 2; }

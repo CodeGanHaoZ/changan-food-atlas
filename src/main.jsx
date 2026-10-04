@@ -10,9 +10,6 @@ import { buildRoute } from './services/routeApi.js'
 // Keep the icon set local so the demo remains complete when the venue network is unavailable.
 addCollection(mingcuteIcons)
 
-const FOOD_IMAGE_BASE = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt='
-const FOOD_IMAGE_SIZE = '&image_size=landscape_4_3'
-
 function IconButton({ icon, label, onClick, active = false }) {
   return <button className={`icon-btn ${active ? 'is-active' : ''}`} aria-label={label} title={label} onClick={onClick}><Icon icon={icon} width="20" height="20" /></button>
 }
@@ -39,6 +36,12 @@ function FlatDishVisual({ dish, compact = false }) {
         <path className="flat-bread flat-bread-top" d="M101 125 Q112 89 210 89 Q308 89 319 125 Q210 145 101 125 Z" />
         <path className="flat-detail" d="M138 112 Q210 126 282 112" />
       </>}
+      {kind === 'bread' && <>
+        <path className="flat-bread" d="M98 126 Q110 89 210 80 Q310 89 322 126 L306 176 Q210 207 114 176 Z" />
+        <path className="flat-bread-top" d="M110 122 Q122 94 210 87 Q298 94 310 122 Q210 145 110 122 Z" />
+        <path className="flat-detail" d="M154 108l10 9m34-20 9 12m33-11 10 9m25-1 7 9" />
+        <circle className="flat-garnish" cx="144" cy="119" r="4" /><circle className="flat-garnish" cx="273" cy="117" r="4" />
+      </>}
       {kind === 'noodle' && <>
         <path className="flat-bowl" d="M90 126 Q210 204 330 126 L308 191 Q210 231 112 191 Z" />
         <path className="flat-soup" d="M103 132 Q210 188 317 132 Q300 112 210 112 Q120 112 103 132 Z" />
@@ -56,18 +59,27 @@ function FlatDishVisual({ dish, compact = false }) {
         <path className="flat-detail" d="M142 123 Q176 111 206 124 T276 123" />
         <circle className="flat-garnish" cx="159" cy="134" r="8" /><circle className="flat-garnish" cx="267" cy="133" r="8" />
       </>}
+      {kind === 'meatball' && <>
+        <path className="flat-bowl" d="M92 120 Q210 201 328 120 L308 190 Q210 228 112 190 Z" />
+        <ellipse className="flat-soup" cx="210" cy="124" rx="108" ry="42" />
+        <circle className="flat-meatball" cx="160" cy="123" r="18" /><circle className="flat-meatball" cx="210" cy="135" r="19" /><circle className="flat-meatball" cx="262" cy="120" r="17" />
+        <path className="flat-vegetable" d="M135 145l18-8 10 14-21 8Zm123-4 19-7 9 13-20 8Z" />
+      </>}
+      {kind === 'chicken' && <>
+        <path className="flat-chicken" d="M133 145 Q112 118 136 96 Q159 75 193 86 Q214 62 249 77 Q285 91 284 128 Q307 146 285 171 Q256 200 211 183 Q172 194 145 176 Q126 164 133 145Z" />
+        <path className="flat-chicken-leg" d="M260 160l33 25m-20-5 17-2m-25 9 5 11" />
+        <path className="flat-chicken-leg" d="M151 161l-30 22m20-3-15 7m25-11 1 11" />
+        <path className="flat-detail" d="M173 112 Q206 96 242 111 T273 139" />
+        <circle className="flat-garnish" cx="182" cy="128" r="7" /><circle className="flat-garnish" cx="241" cy="145" r="7" />
+      </>}
     </svg>
     <span className="flat-dish-caption">{dish?.category?.split(' · ')[0]}</span>
   </div>
 }
 
 function FoodImage({ dish, compact = false }) {
-  const [loaded, setLoaded] = useState(false)
-  const [failed, setFailed] = useState(false)
-  const imageUrl = dish?.imagePrompt ? `${FOOD_IMAGE_BASE}${encodeURIComponent(dish.imagePrompt)}${FOOD_IMAGE_SIZE}` : ''
   return <div className={`food-image-frame ${compact ? 'is-compact' : ''}`}>
     <FlatDishVisual dish={dish} compact={compact} />
-    {!failed && imageUrl && <img className={loaded ? 'is-loaded' : ''} src={imageUrl} alt={`${dish.name}图片`} onLoad={() => setLoaded(true)} onError={() => setFailed(true)} />}
   </div>
 }
 
@@ -83,6 +95,12 @@ function PreparationPanel({ dish, compact = false }) {
       <div className="preparation-item"><Icon icon="mingcute:fire-line" width="18" height="18" /><span><b>做法</b><small>{steps.join(' → ')}</small></span></div>
     </div>
   </div>
+}
+
+function HistorySourceNote({ dish }) {
+  const refs = (dish?.historySourceIds || []).map((id) => sources.find((source) => source.id === id)).filter(Boolean)
+  if (!refs.length) return null
+  return <p className="detail-source-note">历史资料：{refs.map((source, index) => <React.Fragment key={source.id}>{index > 0 && ' · '}{source.url ? <a href={source.url} target="_blank" rel="noreferrer">{source.title.replace('百度百科 · ', '')}</a> : source.title}</React.Fragment>)}</p>
 }
 
 // 钟楼剪影（Hero 底纹）
@@ -257,17 +275,18 @@ function App() {
     }
   }
 
-  // 当前图鉴轮播：每 3.6s 自动切换，弹窗打开或在收集册页时暂停
+  // 当前图鉴轮播：固定展示默认前8道菜，每3.6s自动切换，弹窗打开或离开首页时暂停
   useEffect(() => {
-    if (filteredDishes.length < 2 || detailDish || view !== 'home') return undefined
+    const defaultDishes = dishes.slice(0, 8)
+    if (defaultDishes.length < 2 || detailDish || view !== 'home') return undefined
     const timer = setInterval(() => {
       setSelectedDish((current) => {
-        const idx = filteredDishes.findIndex((dish) => dish.id === current?.id)
-        return filteredDishes[(idx + 1) % filteredDishes.length]
+        const idx = defaultDishes.findIndex((dish) => dish.id === current?.id)
+        return defaultDishes[(idx + 1) % defaultDishes.length]
       })
     }, 3600)
     return () => clearInterval(timer)
-  }, [filteredDishes, detailDish, view, carouselSeed])
+  }, [detailDish, view, carouselSeed])
 
   // 滚动到对应板块时自动切换导航高亮（PC 顶部导航 + 移动端底部导航共用）
   useEffect(() => {
@@ -391,7 +410,7 @@ function App() {
       <main className="collection-main" id="top">
         <section className="collection-section section-wrap">
           <div className="collection-head" data-reveal>
-            <div className="section-heading"><div><div className="kicker">食游收集册</div><h2>长安八味 · 全收录</h2></div><p>共收录 {dishes.length} 道风味，点击任意一味查看详情。</p></div>
+            <div className="section-heading"><div><div className="kicker">食游收集册</div><h2>长安风味 · 全收录</h2></div><p>共收录 {dishes.length} 道风味，点击任意一味查看详情。</p></div>
           </div>
           <div className="collection-grid">{dishes.map((dish, index) => (
             <article key={dish.id} className="collect-card card" data-reveal style={{ '--reveal-delay': `${(index % 4) * 70}ms` }} onClick={() => setDetailDish(dish)}>
@@ -399,7 +418,7 @@ function App() {
               <div className="mini-canvas"><FoodImage dish={dish} compact /></div>
               <h3>{dish.name}</h3>
               <p>{dish.note}</p>
-              <div className="collect-meta"><span className="tag tag-gold">{dish.category}</span>{dish.score && <span className="dish-score"><Icon icon="mingcute:star-line" width="13" height="13" />{dish.score}</span>}</div>
+              <div className="collect-meta"><span className="tag tag-gold">{dish.category}</span><span className="dish-score" title={dish.scoreIsDefault ? '未显示平台评分，按规则展示 90.0' : '游陕西截图分值'}><Icon icon="mingcute:star-line" width="13" height="13" />{dish.score || '90.0'}</span></div>
             </article>
           ))}</div>
           <div className="collection-foot" data-reveal><button className="btn btn-ghost" onClick={() => setView('home')}><Icon icon="mingcute:arrow-left-line" width="18" height="18" />返回首页</button></div>
@@ -412,10 +431,10 @@ function App() {
           <div className="kicker">长安 · 食游</div>
           <h1>长安寻味</h1>
           <p className="hero-lead">钟楼听晨钟，巷里寻真香。</p>
-          <div className="hero-actions"><button className="btn btn-primary" onClick={() => document.getElementById('atlas')?.scrollIntoView({ behavior: 'smooth' })}><Icon icon="mingcute:book-6-line" width="20" height="20" />看八味</button><button className="btn btn-ghost" onClick={startJourney}><Icon icon="mingcute:route-line" width="20" height="20" />寻一程</button></div>
+          <div className="hero-actions"><button className="btn btn-primary" onClick={() => document.getElementById('atlas')?.scrollIntoView({ behavior: 'smooth' })}><Icon icon="mingcute:book-6-line" width="20" height="20" />看风味</button><button className="btn btn-ghost" onClick={startJourney}><Icon icon="mingcute:route-line" width="20" height="20" />寻一程</button></div>
         </div>
         <div className="hero-stage card" data-reveal style={{ '--reveal-delay': '120ms' }}>
-          <div className="stage-label"><span>当前图鉴 <b>{String(dishes.findIndex((dish) => dish.id === selectedDish.id) + 1).padStart(2, '0')} / {String(dishes.length).padStart(2, '0')}</b></span><strong>{selectedDish.category}</strong></div>
+          <div className="stage-label"><span>当前图鉴 <b>{String(dishes.slice(0, 8).findIndex((dish) => dish.id === selectedDish.id) + 1 || 1).padStart(2, '0')} / 08</b></span><strong>{selectedDish.category}</strong></div>
           <div className="hero-canvas stage-swap" key={`canvas-${selectedDish.id}`}><FoodImage dish={selectedDish} /><button className="carousel-arrow carousel-arrow-prev" onClick={() => cycleDish(-1)} aria-label="上一道菜"><Icon icon="mingcute:left-line" width="20" height="20" /></button><button className="carousel-arrow carousel-arrow-next" onClick={() => cycleDish(1)} aria-label="下一道菜"><Icon icon="mingcute:right-line" width="20" height="20" /></button></div>
           <div className="stage-caption stage-swap" key={`caption-${selectedDish.id}`}><div><h2>{selectedDish.name}</h2><p>{selectedDish.note}</p></div><IconButton icon="mingcute:arrow-right-up-line" label="查看菜品详情" onClick={() => setDetailDish(selectedDish)} /></div>
           <div className="stage-ingredients stage-swap" key={`ing-${selectedDish.id}`} aria-label="主要食材"><span className="stage-ingredients-title">入味</span>{selectedDish.ingredients.slice(0, 4).map((ingredient, index) => <span key={ingredient}><i>{String(index + 1).padStart(2, '0')}</i>{ingredient}</span>)}</div>
@@ -442,8 +461,8 @@ function App() {
 
       <section id="atlas" className="atlas-section section-wrap">
         <SectionRule />
-        <div className="section-heading" data-reveal><div><div className="kicker">长安八味</div><h2>八味入长安</h2></div><p>一城八味，皆是长安烟火。</p></div>
-        <div className="dish-grid">{filteredDishes.map((dish, index) => <article key={dish.id} className={`dish-card card ${selectedDish.id === dish.id ? 'is-selected' : ''}`} data-reveal style={{ '--reveal-delay': `${(index % 4) * 90}ms` }} onClick={() => { setSelectedDish(dish); setDetailDish(dish) }}><div className="dish-card-top"><span className="dish-index">0{index + 1}</span><span className="dish-category">{dish.category}</span></div><div className="mini-canvas"><FoodImage dish={dish} compact /></div><div className="dish-info"><div><h3>{dish.name}</h3><p>{dish.note}</p>{dish.score && <span className="dish-score"><Icon icon="mingcute:star-line" width="13" height="13" />喜爱值 {dish.score}</span>}</div><Icon icon="mingcute:arrow-right-up-line" width="20" height="20" /></div><div className="dish-tags">{dish.tags.map((tag) => <span key={tag} className="tag tag-gold">{tag}</span>)}</div></article>)}</div>
+        <div className="section-heading" data-reveal><div><div className="kicker">长安风味</div><h2>风味入长安</h2></div><p>一城风味，皆是长安烟火。</p></div>
+        <div className="dish-grid">{filteredDishes.slice(0, 8).map((dish, index) => <article key={dish.id} className={`dish-card card ${selectedDish.id === dish.id ? 'is-selected' : ''}`} data-reveal style={{ '--reveal-delay': `${(index % 4) * 90}ms` }} onClick={() => { setSelectedDish(dish); setDetailDish(dish) }}><div className="dish-card-top"><span className="dish-index">{String(index + 1).padStart(2, '0')}</span><span className="dish-category">{dish.category}</span></div><div className="mini-canvas"><FoodImage dish={dish} compact /></div><div className="dish-info"><div><h3>{dish.name}</h3><p>{dish.note}</p><span className="dish-score" title={dish.scoreIsDefault ? '未显示平台评分，按规则展示 90.0' : '游陕西截图分值'}><Icon icon="mingcute:star-line" width="13" height="13" />喜爱值 {dish.score || '90.0'}</span></div><Icon icon="mingcute:arrow-right-up-line" width="20" height="20" /></div><div className="dish-tags">{dish.tags.map((tag) => <span key={tag} className="tag tag-gold">{tag}</span>)}</div></article>)}</div>
         <div className="dish-more" data-reveal><button className="btn btn-ghost" onClick={openCollection}><Icon icon="mingcute:book-6-line" width="18" height="18" />查看更多 · 打开收集册</button></div>
       </section>
     </main>
@@ -451,7 +470,7 @@ function App() {
 
     <footer className="site-footer section-wrap" data-reveal><div className="footer-rule"><span /><i className="footer-motif" aria-hidden="true" /><span /></div><div className="footer-main"><div><div className="kicker">食游图鉴</div><h2>一味一巷，记住长安。</h2></div><p>烟火有迹，风味有名。</p></div><div className="footer-source"><Icon icon="mingcute:file-check-line" width="16" height="16" /><span>数据来源：游陕西小程序 · 用户提供榜单与店铺截图</span></div></footer>
 
-    {detailDish && <Modal onClose={() => setDetailDish(null)} className="detail-modal" label={`${detailDish.name}详情`}><div className="detail-visual"><FoodImage dish={detailDish} /></div><div className="detail-body"><div className="kicker">味之笺</div><h2>{detailDish.name}</h2><p className="detail-note">{detailDish.note}</p><div className="detail-tags">{detailDish.tags.map((tag) => <span key={tag} className="tag tag-gold">{tag}</span>)}</div><div className="detail-block"><h4>一味小史</h4><p>{detailDish.history}</p></div><PreparationPanel dish={detailDish} /><div className="detail-block"><h4>附近怎么吃</h4><p>可在店铺资料中查找这道味道 · 价格以游陕西页面为准</p></div><button className="btn btn-primary" onClick={() => { setDetailDish(null); document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' }); setQuery(`想找适合吃${detailDish.name}的真实地点`) }}><Icon icon="mingcute:compass-line" width="20" height="20" />寻找这道味道</button></div></Modal>}
+    {detailDish && <Modal onClose={() => setDetailDish(null)} className="detail-modal" label={`${detailDish.name}详情`}><div className="detail-visual"><FoodImage dish={detailDish} /></div><div className="detail-body"><div className="kicker">味之笺</div><h2>{detailDish.name}</h2><p className="detail-note">{detailDish.note}</p><div className="detail-tags">{detailDish.tags.map((tag) => <span key={tag} className="tag tag-gold">{tag}</span>)}</div><div className="detail-block"><h4>一味小史</h4><p>{detailDish.history}</p><HistorySourceNote dish={detailDish} /></div><PreparationPanel dish={detailDish} /><div className="detail-block"><h4>附近怎么吃</h4><p>可在店铺资料中查找这道味道 · 价格以游陕西页面为准</p></div><button className="btn btn-primary" onClick={() => { setDetailDish(null); document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' }); setQuery(`想找适合吃${detailDish.name}的真实地点`) }}><Icon icon="mingcute:compass-line" width="20" height="20" />寻找这道味道</button></div></Modal>}
     {detailPlace && <Modal onClose={() => setDetailPlace(null)} className="place-modal" label={`${detailPlace.name}门店详情`}><div className="place-modal-hero"><div className="place-cover"><BrandMark compact /><span>{detailPlace.cuisine}</span></div><div className="place-title"><span className="kicker">门店食单</span><h2>{detailPlace.name}</h2><p>{detailPlace.area}</p></div></div><div className="place-modal-body"><div className="place-facts"><div><b>人均</b><span>{detailPlace.averagePrice}</span></div><div><b>菜系</b><span>{detailPlace.cuisine}</span></div><div><b>营业时间</b><span>{detailPlace.openingHours}</span></div></div><div className="place-info-row"><Icon icon="mingcute:fork-knife-line" width="21" height="21" /><span>{detailPlace.services?.join(' · ') || '堂食服务 · 特色推荐 · 交通指南'}</span></div><div className="place-info-row"><Icon icon="mingcute:map-pin-line" width="21" height="21" /><span>{detailPlace.address}</span><small>{distanceTo(detailPlace) ? `${distanceTo(detailPlace)} km` : '开启定位查看距离'}</small></div><div className="place-chip-row"><b>标签</b>{detailPlace.tags.map((tag) => <span key={tag} className="place-chip">{tag}</span>)}</div><div className="place-chip-row"><b>收录</b>{detailPlace.collections.map((item) => <span key={item} className="place-chip place-chip-source">{item}</span>)}</div><section className="place-intro"><h3>饭店简介</h3><p>{detailPlace.intro}</p></section><section className="place-menu"><div className="place-menu-heading"><h3>推荐菜单</h3><span>{detailPlace.menu.length} 道</span></div><div className="place-menu-grid">{detailPlace.menu.map((item) => { const linkedDish = item.dishId ? dishes.find((dish) => dish.id === item.dishId) : null; return <button key={item.name} className="place-menu-item" onClick={() => { if (linkedDish) { setDetailPlace(null); setDetailDish(linkedDish) } }} disabled={!linkedDish}><span className="place-menu-art"><Icon icon={linkedDish ? 'mingcute:bowl-line' : 'mingcute:fork-knife-line'} width="25" height="25" /></span><span><b>{item.name}</b><small>{item.note}{!linkedDish ? ' · 价格以门店为准' : ''}</small></span><Icon icon="mingcute:arrow-right-up-line" width="17" height="17" /></button> })}</div></section><p className="place-source-note">店铺信息参考游陕西小程序。</p></div></Modal>}
     {showSources && <Modal onClose={() => setShowSources(false)} className="source-modal" label="来源札记"><div className="kicker">来源札记</div><h2>一味一证</h2><p>每一条味道，都有来处。</p><div className="source-list">{sources.map((source) => <div key={source.id}><Icon icon={source.kind === 'place' ? 'mingcute:map-pin-line' : 'mingcute:file-line'} width="20" height="20" /><span><b>{source.title}</b><small>{source.note}</small></span><em>{source.verification}</em></div>)}</div></Modal>}
     <BackToTop onReset={() => setRevealSeed((v) => v + 1)} onHome={view !== 'home' ? () => { setView('home'); window.scrollTo(0, 0) } : undefined} />
