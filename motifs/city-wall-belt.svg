@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 90" width="480" height="90" fill="none" role="img" aria-label="城墙与城楼剪影带">
+  <!--
+    城墙与城楼剪影带 · City Wall & Gate Tower Belt
+    用途：页脚底部装饰带、章节分隔、Hero 下沿
+    用法：width="100%" height="90" preserveAspectRatio="none"
+    城门洞以 fill-rule="evenodd" 挖空，透出下层背景
+  -->
+  <g fill="currentColor">
+    <!-- 墙体 + 城门洞（evenodd 挖空） -->
+    <path fill-rule="evenodd" d="M0 56h480v34H0z M226 90V70a14 14 0 0 1 28 0v20z"/>
+    <!-- 左段垛口 -->
+    <path d="M4 44h16v12H4zM36 44h16v12H36zM68 44h16v12H68zM100 44h16v12h-16zM132 44h16v12h-16zM164 44h16v12h-16z"/>
+    <!-- 右段垛口 -->
+    <path d="M300 44h16v12h-16zM332 44h16v12h-16zM364 44h16v12h-16zM396 44h16v12h-16zM428 44h16v12h-16zM460 44h16v12h-16z"/>
+    <!-- 城楼主体 -->
+    <path d="M212 22h56v34h-56z"/>
+    <!-- 城楼飞檐 -->
+    <path d="M196 22 Q240 32 284 22 L284 29 Q240 39 196 29 Z"/>
+    <!-- 城楼台基 -->
+    <path d="M196 56h88v9h-88z"/>
+  </g>
+  <!-- 城楼竖向窗格线 -->
+  <g stroke="currentColor" stroke-width="2" opacity="0.4">
+    <path d="M240 30v20M228 40h24"/>
+  </g>
+</svg>

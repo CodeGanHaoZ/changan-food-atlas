@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 150" width="120" height="150" fill="none" role="img" aria-label="钟楼剪影">
+  <!--
+    钟楼剪影 · Bell Tower Silhouette
+    用途：Hero 背景底纹、页脚装饰、章节页角标
+    用法：单色填充（currentColor），建议 opacity 0.08–0.16 作背景，或 0.9 作主视觉
+  -->
+  <g fill="currentColor">
+    <!-- 宝顶 -->
+    <circle cx="60" cy="34" r="4.5"/>
+    <path d="M58.6 38h2.8v5h-2.8z"/>
+    <!-- 顶檐（攒尖顶） -->
+    <path d="M26 72 Q38 50 60 42 Q82 50 94 72 L94 79 Q60 92 26 79 Z"/>
+    <!-- 三层塔身 -->
+    <path d="M50 72h20v20H50z"/>
+    <path d="M44 92h32v20H44z"/>
+    <path d="M38 112h44v22H38z"/>
+    <!-- 二层檐 -->
+    <path d="M26 72 Q60 85 94 72 L94 79 Q60 92 26 79 Z"/>
+    <!-- 一层檐 -->
+    <path d="M18 92 Q60 105 102 92 L102 99 Q60 112 18 99 Z"/>
+    <!-- 台基 -->
+    <path d="M10 112 Q60 125 110 112 L110 119 Q60 132 10 119 Z"/>
+    <path d="M26 134h68v14H26z"/>
+  </g>
+  <!-- 窗洞：以背景色挖空感，用描边线暗示 -->
+  <g stroke="currentColor" stroke-width="2" opacity="0.45">
+    <path d="M60 100v-16M52 92h16M60 120v-16M52 112h16M60 132v-14M52 125h16"/>
+  </g>
+</svg>
