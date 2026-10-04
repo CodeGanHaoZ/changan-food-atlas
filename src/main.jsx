@@ -10,6 +10,9 @@ import { buildRoute } from './services/routeApi.js'
 // Keep the icon set local so the demo remains complete when the venue network is unavailable.
 addCollection(mingcuteIcons)
 
+const FOOD_IMAGE_BASE = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt='
+const FOOD_IMAGE_SIZE = '&image_size=landscape_4_3'
+
 function IconButton({ icon, label, onClick, active = false }) {
   return <button className={`icon-btn ${active ? 'is-active' : ''}`} aria-label={label} title={label} onClick={onClick}><Icon icon={icon} width="20" height="20" /></button>
 }
@@ -58,6 +61,16 @@ function FlatDishVisual({ dish, compact = false }) {
   </div>
 }
 
+function FoodImage({ dish, compact = false }) {
+  const [loaded, setLoaded] = useState(false)
+  const [failed, setFailed] = useState(false)
+  const imageUrl = dish?.imagePrompt ? `${FOOD_IMAGE_BASE}${encodeURIComponent(dish.imagePrompt)}${FOOD_IMAGE_SIZE}` : ''
+  return <div className={`food-image-frame ${compact ? 'is-compact' : ''}`}>
+    <FlatDishVisual dish={dish} compact={compact} />
+    {!failed && imageUrl && <img className={loaded ? 'is-loaded' : ''} src={imageUrl} alt={`${dish.name}图片`} onLoad={() => setLoaded(true)} onError={() => setFailed(true)} />}
+  </div>
+}
+
 function PreparationPanel({ dish, compact = false }) {
   const ingredients = dish.ingredients.slice(0, 3)
   const seasoning = dish.seasoning?.slice(0, 3) || dish.ingredients.slice(-2)
@@ -66,10 +79,15 @@ function PreparationPanel({ dish, compact = false }) {
     <div className="preparation-heading"><span>味与法</span><i>{dish.ingredients.length} 味 · {dish.steps.length} 步</i></div>
     <div className="preparation-grid">
       <div className="preparation-item"><Icon icon="mingcute:leaf-line" width="18" height="18" /><span><b>食材</b><small>{ingredients.join(' · ')}</small></span></div>
-      <div className="preparation-item"><Icon icon="mingcute:spice-line" width="18" height="18" /><span><b>调味</b><small>{seasoning.join(' · ')}</small></span></div>
+      <div className="preparation-item"><Icon icon="mingcute:flower-line" width="18" height="18" /><span><b>调味</b><small>{seasoning.join(' · ')}</small></span></div>
       <div className="preparation-item"><Icon icon="mingcute:fire-line" width="18" height="18" /><span><b>做法</b><small>{steps.join(' → ')}</small></span></div>
     </div>
   </div>
+}
+
+// 钟楼剪影（Hero 底纹）
+function ZhonglouMotif() {
+  return <svg className="hero-motif" viewBox="0 0 120 150" aria-hidden="true"><g fill="currentColor"><circle cx="60" cy="34" r="4.5" /><path d="M58.6 38h2.8v5h-2.8z" /><path d="M26 72 Q38 50 60 42 Q82 50 94 72 L94 79 Q60 92 26 79 Z" /><path d="M50 72h20v20H50z" /><path d="M44 92h32v20H44z" /><path d="M38 112h44v22H38z" /><path d="M26 72 Q60 85 94 72 L94 79 Q60 92 26 79 Z" /><path d="M18 92 Q60 105 102 92 L102 99 Q60 112 18 99 Z" /><path d="M10 112 Q60 125 110 112 L110 119 Q60 132 10 119 Z" /><path d="M26 134h68v14H26z" /></g><g stroke="currentColor" strokeWidth="2" opacity="0.45"><path d="M60 100v-16M52 92h16M60 120v-16M52 112h16M60 132v-14M52 125h16" /></g></svg>
 }
 
 function SectionRule() { return <div className="section-rule" aria-hidden="true"><span /><i className="section-rule-mark" /><span /></div> }
@@ -92,12 +110,13 @@ function loadTianditu() {
   return tiandituLoader
 }
 
-function TianDiMap({ stops }) {
+function TianDiMap({ stops, onOpenDish }) {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
   const markersRef = useRef([])
   const [mapReady, setMapReady] = useState(false)
   const [loadFailed, setLoadFailed] = useState(false)
+  const [activePlace, setActivePlace] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -117,6 +136,7 @@ function TianDiMap({ stops }) {
     const map = mapRef.current
     markersRef.current.forEach((marker) => map.removeOverLay(marker))
     markersRef.current = []
+    setActivePlace(null)
     const points = []
     stops.forEach((place, index) => {
       if (!place.longitude || !place.latitude) return
@@ -125,40 +145,98 @@ function TianDiMap({ stops }) {
       const marker = new T.Marker(lnglat)
       map.addOverLay(marker)
       markersRef.current.push(marker)
-      marker.addEventListener('click', (e) => {
-        const firstDish = place.dish.split(' / ')[0]
-        const infoWin = new T.InfoWindow()
-        infoWin.setContent(`<div style="padding:12px;min-width:190px;background:#101513;color:#f3e9d2;font-size:12px;line-height:1.6;">
-          <div style="margin-bottom:6px;color:#d7a855;font-size:14px;font-weight:600;">0${index + 1} · ${place.name}</div>
-          <div style="margin-bottom:2px;color:#9aa79f;">${place.area} · ${place.type}</div>
-          <div style="margin-bottom:2px;">味道：${place.dish}</div>
-          <div style="margin-bottom:8px;color:#9aa79f;">${place.price} · 评分 ${place.score}</div>
-          <div style="text-align:center;"><button style="padding:5px 14px;border:none;border-radius:4px;background:#b52f35;color:#fff;cursor:pointer;" onclick="window.__atlasOpenDish && window.__atlasOpenDish('${firstDish}')">查看这道味道</button></div>
-        </div>`, { offset: new T.Point(0, -30) })
-        map.openInfoWindow(infoWin, e.lnglat)
-      })
+      marker.addEventListener('click', () => setActivePlace({ ...place, index }))
     })
     if (points.length > 0) map.setViewport(points)
   }, [mapReady, stops])
 
   if (loadFailed) return <div className="tianditu-fallback">天地图加载失败，请检查网络后刷新。</div>
-  return <div ref={containerRef} className="tianditu-map" />
+  return <>
+    <div ref={containerRef} className="tianditu-map" />
+    {activePlace && (
+      <div className="map-place-card" key={`${activePlace.name}-${activePlace.index}`}>
+        <div className="map-place-info">
+          <b>{String(activePlace.index + 1).padStart(2, '0')} · {activePlace.name}</b>
+          <span>{activePlace.area}{activePlace.type ? ` · ${activePlace.type}` : ''}</span>
+          <span>味道：{activePlace.dish} · {activePlace.price}{activePlace.score ? ` · 喜爱值 ${activePlace.score}` : ''}</span>
+        </div>
+        <button className="btn btn-primary btn-small" onClick={() => onOpenDish?.(activePlace.dish.split(' / ')[0])}>查看味道</button>
+        <button className="map-place-close" aria-label="关闭" onClick={() => setActivePlace(null)}><Icon icon="mingcute:close-line" width="18" height="18" /></button>
+      </div>
+    )}
+  </>
+}
+
+// 滚动进入视野时为元素添加渐入效果
+function useReveal() {
+  useEffect(() => {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) { entry.target.classList.add('is-visible'); io.unobserve(entry.target) }
+      })
+    }, { threshold: 0.1, rootMargin: '0px 0px -8% 0px' })
+    document.querySelectorAll('[data-reveal]:not(.is-visible)').forEach((el) => io.observe(el))
+    return () => io.disconnect()
+  })
+}
+
+// 弹窗包装：挂载时渐入，关闭时先渐出再卸载
+function Modal({ onClose, className, label, children }) {
+  const [closing, setClosing] = useState(false)
+  const close = () => { if (closing) return; setClosing(true); window.setTimeout(onClose, 240) }
+  return <div className={`modal-backdrop ${closing ? 'is-closing' : ''}`} onClick={close}>
+    <div className={className} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={label}>
+      <button className="modal-close" onClick={close} aria-label="关闭"><Icon icon="mingcute:close-line" width="22" height="22" /></button>
+      {children}
+    </div>
+  </div>
+}
+
+function BackToTop({ onReset, onHome }) {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 420)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+  const handleClick = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    // 等回到顶部后再重置渐入动画，避免上滑途中提前触发
+    const startedAt = Date.now()
+    const timer = window.setInterval(() => {
+      if (window.scrollY > 2 && Date.now() - startedAt < 3000) return
+      window.clearInterval(timer)
+      document.querySelectorAll('[data-reveal].is-visible').forEach((el) => el.classList.remove('is-visible'))
+      onReset?.()
+    }, 120)
+  }
+  return (
+    <div className="float-actions">
+      {onHome && <button className="back-home" aria-label="返回首页" onClick={onHome}><Icon icon="mingcute:home-3-line" width="20" height="20" /></button>}
+      <button className={`back-to-top ${visible ? 'is-visible' : ''}`} aria-label="返回顶部" onClick={handleClick}><Icon icon="mingcute:arrow-up-line" width="20" height="20" /></button>
+    </div>
+  )
 }
 
 function App() {
   const [selectedDish, setSelectedDish] = useState(dishes[0])
   const [detailDish, setDetailDish] = useState(null)
+  const [detailPlace, setDetailPlace] = useState(null)
   const [query, setQuery] = useState('')
   const [activeTab, setActiveTab] = useState('图鉴')
   const [plan, setPlan] = useState(null)
   const [showSources, setShowSources] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [userPosition, setUserPosition] = useState(null)
+  const [locationState, setLocationState] = useState('idle')
+  const [, setRevealSeed] = useState(0)
+  const [view, setView] = useState('home') // home | collection（收集册页）| places（店铺列表页）
+  const [carouselSeed, setCarouselSeed] = useState(0) // 手动切换时重置轮播计时
+  const [exploreFlash, setExploreFlash] = useState(false)
+  const flashTimerRef = useRef(null)
 
-  // 供天地图信息窗体按钮（原生 onclick）打开菜品详情
-  useEffect(() => {
-    window.__atlasOpenDish = (dishName) => setDetailDish(dishes.find((dish) => dish.name.includes(dishName)) || dishes[0])
-    return () => { delete window.__atlasOpenDish }
-  }, [])
+  useReveal()
 
   const filteredDishes = useMemo(() => {
     const term = query.trim()
@@ -172,11 +250,100 @@ function App() {
     try {
       const parsed = await parseExploreQuery(preset)
       const route = await buildRoute(parsed)
-      window.setTimeout(() => { setPlan({ ...route, note: '演示路线：地点、价格、评分和营业状态均来自本地 seed，正式版本需替换为可核验来源。' }); setIsGenerating(false) }, 420)
+      window.setTimeout(() => { setPlan({ ...route, note: '路线资料来自游陕西小程序，价格与营业状态请以现场为准。' }); setIsGenerating(false) }, 420)
     } catch {
-      setPlan({ title: '钟楼 · 备用路线', subtitle: '本地离线方案 · 来源待确认', stops: places, note: 'Agent 暂不可用，已回退到本地演示路线。' })
+      setPlan({ title: '钟楼 · 备用路线', subtitle: '本地离线方案 · 来源待确认', stops: places, note: '路线生成暂不可用，已展示附近资料。' })
       setIsGenerating(false)
     }
+  }
+
+  // 当前图鉴轮播：每 3.6s 自动切换，弹窗打开或在收集册页时暂停
+  useEffect(() => {
+    if (filteredDishes.length < 2 || detailDish || view !== 'home') return undefined
+    const timer = setInterval(() => {
+      setSelectedDish((current) => {
+        const idx = filteredDishes.findIndex((dish) => dish.id === current?.id)
+        return filteredDishes[(idx + 1) % filteredDishes.length]
+      })
+    }, 3600)
+    return () => clearInterval(timer)
+  }, [filteredDishes, detailDish, view, carouselSeed])
+
+  // 滚动到对应板块时自动切换导航高亮（PC 顶部导航 + 移动端底部导航共用）
+  useEffect(() => {
+    if (view !== 'home') { setActiveTab('图鉴'); return undefined }
+    const sections = [
+      ['atlas', '图鉴'],
+      ['explore', '在地探索'],
+      ['plan', '路线方案'],
+    ]
+    const onScroll = () => {
+      const anchor = window.scrollY + 140 // 固定头部高度 + 触发提前量
+      let current = '图鉴'
+      for (const [id, tab] of sections) {
+        const el = document.getElementById(id)
+        if (el && el.offsetTop <= anchor) current = tab
+      }
+      setActiveTab(current)
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [view])
+
+  // 切换视图时回到页面顶部
+  useEffect(() => { window.scrollTo({ top: 0 }) }, [view])
+
+  // 「寻一程」：填入示例条件并生成路线，滚动到探索区并高亮面板
+  function startJourney() {
+    const preset = '钟楼附近 · 2 小时 · 3 种小吃'
+    setView('home')
+    setActiveTab('在地探索')
+    generatePlan(preset)
+    requestAnimationFrame(() => document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+    window.clearTimeout(flashTimerRef.current)
+    setExploreFlash(true)
+    flashTimerRef.current = window.setTimeout(() => setExploreFlash(false), 1600)
+  }
+
+  function openCollection() {
+    setView('collection')
+    setActiveTab('图鉴')
+  }
+
+  function openPlaces() {
+    setView('places')
+    setActiveTab('路线方案')
+    window.scrollTo(0, 0)
+  }
+
+  // 轮播手动切换：重置自动播放计时
+  function cycleDish(step) {
+    setCarouselSeed((v) => v + 1)
+    setSelectedDish((current) => {
+      const idx = dishes.findIndex((dish) => dish.id === current?.id)
+      return dishes[(idx + step + dishes.length) % dishes.length]
+    })
+  }
+
+  function requestLocation() {
+    if (!navigator.geolocation) { setLocationState('unsupported'); return }
+    setLocationState('loading')
+    navigator.geolocation.getCurrentPosition((position) => {
+      setUserPosition({ latitude: position.coords.latitude, longitude: position.coords.longitude })
+      setLocationState('ready')
+    }, () => setLocationState('denied'), { enableHighAccuracy: true, timeout: 8000, maximumAge: 300000 })
+  }
+
+  function distanceTo(place) {
+    if (!userPosition || !place.latitude || !place.longitude) return null
+    const rad = Math.PI / 180
+    const lat1 = userPosition.latitude * rad
+    const lat2 = place.latitude * rad
+    const dLat = (place.latitude - userPosition.latitude) * rad
+    const dLon = (place.longitude - userPosition.longitude) * rad
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2
+    return (6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(1)
   }
 
   return <div className="app-shell texture-paper">
@@ -186,60 +353,108 @@ function App() {
       <nav className="site-nav" aria-label="主导航">
         {['图鉴', '在地探索', '路线方案'].map((item) => <button key={item} className={activeTab === item ? 'nav-link is-active' : 'nav-link'} onClick={() => { setActiveTab(item); document.getElementById(item === '图鉴' ? 'atlas' : item === '在地探索' ? 'explore' : 'plan')?.scrollIntoView({ behavior: 'smooth' }) }}>{item}</button>)}
       </nav>
-      <button className="btn btn-primary header-cta" onClick={() => document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' })}><Icon icon="mingcute:compass-line" width="20" height="20" />开始寻味</button>
     </header>
 
     <nav className="mobile-nav" aria-label="移动端主导航">
       <button className={activeTab === '图鉴' ? 'mobile-nav-item is-active' : 'mobile-nav-item'} onClick={() => { setActiveTab('图鉴'); document.getElementById('atlas')?.scrollIntoView({ behavior: 'smooth' }) }}><Icon icon={activeTab === '图鉴' ? 'mingcute:book-6-fill' : 'mingcute:book-6-line'} width="22" height="22" /><span>图鉴</span></button>
       <button className={activeTab === '在地探索' ? 'mobile-nav-item is-active' : 'mobile-nav-item'} onClick={() => { setActiveTab('在地探索'); document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' }) }}><Icon icon={activeTab === '在地探索' ? 'mingcute:compass-fill' : 'mingcute:compass-line'} width="22" height="22" /><span>探索</span></button>
       <button className={activeTab === '路线方案' ? 'mobile-nav-item is-active' : 'mobile-nav-item'} onClick={() => { setActiveTab('路线方案'); document.getElementById('plan')?.scrollIntoView({ behavior: 'smooth' }) }}><Icon icon={activeTab === '路线方案' ? 'mingcute:route-fill' : 'mingcute:route-line'} width="22" height="22" /><span>路线</span></button>
-      <button className="mobile-nav-item" onClick={() => setShowSources(true)}><Icon icon="mingcute:file-line" width="22" height="22" /><span>来源</span></button>
     </nav>
 
+    {view === 'places' ? (
+      <main className="collection-main" id="top">
+        <section className="collection-section section-wrap">
+          <div className="collection-head" data-reveal>
+            <div className="section-heading"><div><div className="kicker">巷陌札记</div><h2>沿街拾味 · 全收录</h2></div><p>共收录 {places.length} 家店铺，资料来自游陕西小程序，点击任意一家查看详情。</p></div>
+          </div>
+          <div className="places-list">{places.map((place, index) => (
+            <article key={place.id} className="place-list-item card" data-reveal style={{ '--reveal-delay': `${(index % 4) * 70}ms` }} onClick={() => setDetailPlace(place)}>
+              <div className="place-list-index">{String(index + 1).padStart(2, '0')}</div>
+              <div className="place-list-main">
+                <span className="tag tag-jade">{place.type}</span>
+                <h3>{place.name}</h3>
+                <p>{place.area} · {place.dish}</p>
+                <div className="place-list-meta">
+                  <span><Icon icon="mingcute:wallet-line" width="15" height="15" />{place.averagePrice || place.price}</span>
+                  {place.score && <span><Icon icon="mingcute:star-line" width="15" height="15" />喜爱值 {place.score}</span>}
+                  <span><Icon icon="mingcute:time-line" width="15" height="15" />{place.openingHours}</span>
+                </div>
+                <p className="place-list-intro">{place.intro}</p>
+              </div>
+              <span className="field-arrow" aria-hidden="true"><Icon icon="mingcute:arrow-right-up-line" width="20" height="20" /></span>
+            </article>
+          ))}</div>
+          <div className="collection-foot" data-reveal><button className="btn btn-ghost" onClick={() => setView('home')}><Icon icon="mingcute:arrow-left-line" width="18" height="18" />返回首页</button></div>
+        </section>
+      </main>
+    ) : view === 'collection' ? (
+      <main className="collection-main" id="top">
+        <section className="collection-section section-wrap">
+          <div className="collection-head" data-reveal>
+            <div className="section-heading"><div><div className="kicker">食游收集册</div><h2>长安八味 · 全收录</h2></div><p>共收录 {dishes.length} 道风味，点击任意一味查看详情。</p></div>
+          </div>
+          <div className="collection-grid">{dishes.map((dish, index) => (
+            <article key={dish.id} className="collect-card card" data-reveal style={{ '--reveal-delay': `${(index % 4) * 70}ms` }} onClick={() => setDetailDish(dish)}>
+              <div className="collect-index">{String(index + 1).padStart(2, '0')}</div>
+              <div className="mini-canvas"><FoodImage dish={dish} compact /></div>
+              <h3>{dish.name}</h3>
+              <p>{dish.note}</p>
+              <div className="collect-meta"><span className="tag tag-gold">{dish.category}</span>{dish.score && <span className="dish-score"><Icon icon="mingcute:star-line" width="13" height="13" />{dish.score}</span>}</div>
+            </article>
+          ))}</div>
+          <div className="collection-foot" data-reveal><button className="btn btn-ghost" onClick={() => setView('home')}><Icon icon="mingcute:arrow-left-line" width="18" height="18" />返回首页</button></div>
+        </section>
+      </main>
+    ) : (
     <main id="top">
       <section className="hero section-wrap">
-        <div className="hero-copy">
+        <div className="hero-copy" data-reveal>
           <div className="kicker">长安 · 食游</div>
           <h1>长安寻味</h1>
           <p className="hero-lead">钟楼听晨钟，巷里寻真香。</p>
-          <div className="hero-actions"><button className="btn btn-primary" onClick={() => document.getElementById('atlas')?.scrollIntoView({ behavior: 'smooth' })}><Icon icon="mingcute:book-6-line" width="20" height="20" />看八味</button><button className="btn btn-ghost" onClick={() => generatePlan('钟楼附近 · 2 小时 · 3 种小吃')}><Icon icon="mingcute:route-line" width="20" height="20" />寻一程</button></div>
+          <div className="hero-actions"><button className="btn btn-primary" onClick={() => document.getElementById('atlas')?.scrollIntoView({ behavior: 'smooth' })}><Icon icon="mingcute:book-6-line" width="20" height="20" />看八味</button><button className="btn btn-ghost" onClick={startJourney}><Icon icon="mingcute:route-line" width="20" height="20" />寻一程</button></div>
         </div>
-        <div className="hero-stage card">
-          <div className="stage-label"><span>当前图鉴</span><strong>{selectedDish.category}</strong></div>
-          <div className="hero-canvas"><DishCanvas dish={selectedDish} /></div>
-          <div className="stage-caption"><div><span className="kicker">01 / 08</span><h2>{selectedDish.name}</h2><p>{selectedDish.note}</p></div><IconButton icon="mingcute:arrow-right-up-line" label="查看菜品详情" onClick={() => setDetailDish(selectedDish)} /></div>
-          <div className="stage-ingredients" aria-label="主要食材"><span className="stage-ingredients-title">入味</span>{selectedDish.ingredients.slice(0, 4).map((ingredient, index) => <span key={ingredient}><i>{String(index + 1).padStart(2, '0')}</i>{ingredient}</span>)}</div>
-          <div className="stage-steps" aria-label="制作步骤"><span className="stage-steps-title">做法</span><div className="stage-step-track">{selectedDish.steps.slice(0, 3).map((step, index) => <span key={step}><i>{String(index + 1).padStart(2, '0')}</i>{step}</span>)}</div></div>
-          <span className="hero-motif" aria-hidden="true" />
+        <div className="hero-stage card" data-reveal style={{ '--reveal-delay': '120ms' }}>
+          <div className="stage-label"><span>当前图鉴 <b>{String(dishes.findIndex((dish) => dish.id === selectedDish.id) + 1).padStart(2, '0')} / {String(dishes.length).padStart(2, '0')}</b></span><strong>{selectedDish.category}</strong></div>
+          <div className="hero-canvas stage-swap" key={`canvas-${selectedDish.id}`}><FoodImage dish={selectedDish} /><button className="carousel-arrow carousel-arrow-prev" onClick={() => cycleDish(-1)} aria-label="上一道菜"><Icon icon="mingcute:left-line" width="20" height="20" /></button><button className="carousel-arrow carousel-arrow-next" onClick={() => cycleDish(1)} aria-label="下一道菜"><Icon icon="mingcute:right-line" width="20" height="20" /></button></div>
+          <div className="stage-caption stage-swap" key={`caption-${selectedDish.id}`}><div><h2>{selectedDish.name}</h2><p>{selectedDish.note}</p></div><IconButton icon="mingcute:arrow-right-up-line" label="查看菜品详情" onClick={() => setDetailDish(selectedDish)} /></div>
+          <div className="stage-ingredients stage-swap" key={`ing-${selectedDish.id}`} aria-label="主要食材"><span className="stage-ingredients-title">入味</span>{selectedDish.ingredients.slice(0, 4).map((ingredient, index) => <span key={ingredient}><i>{String(index + 1).padStart(2, '0')}</i>{ingredient}</span>)}</div>
+          <div className="stage-steps stage-swap" key={`steps-${selectedDish.id}`} aria-label="制作步骤"><span className="stage-steps-title">做法</span><div className="stage-step-track">{selectedDish.steps.slice(0, 3).map((step, index) => <span key={step}><i>{String(index + 1).padStart(2, '0')}</i>{step}</span>)}</div></div>
+          <ZhonglouMotif />
         </div>
-      </section>
-
-      <section id="atlas" className="atlas-section section-wrap">
-        <SectionRule />
-        <div className="section-heading"><div><div className="kicker">长安八味</div><h2>八味入长安</h2></div><p>一城八味，皆是长安烟火。</p></div>
-        <div className="dish-grid">{filteredDishes.map((dish, index) => <article key={dish.id} className={`dish-card card ${selectedDish.id === dish.id ? 'is-selected' : ''}`} onClick={() => { setSelectedDish(dish); setDetailDish(dish) }}><div className="dish-card-top"><span className="dish-index">0{index + 1}</span><span className="dish-category">{dish.category}</span></div><div className="mini-canvas"><DishCanvas dish={dish} compact /></div><div className="dish-info"><div><h3>{dish.name}</h3><p>{dish.note}</p></div><Icon icon="mingcute:arrow-right-up-line" width="20" height="20" /></div><div className="dish-tags">{dish.tags.map((tag) => <span key={tag} className="tag tag-gold">{tag}</span>)}</div></article>)}</div>
       </section>
 
       <section id="explore" className="explore-section section-wrap">
         <SectionRule />
-        <div className="section-heading"><div><div className="kicker">在地寻味</div><h2>去哪吃，怎么吃</h2></div><p>循着一味，走入一街。</p></div>
+        <div className="section-heading" data-reveal><div><div className="kicker">在地寻味</div><h2>去哪吃，怎么吃</h2></div><p>循着一味，走入一街。</p></div>
         <div className="explore-layout">
-          <div className="agent-panel card"><div className="panel-top"><span className="panel-number">02</span><span className="status-chip"><i />演示资料已载入</span></div><h3>写下你的寻味条件</h3><p className="panel-copy">一念所向，皆可入巷。</p><div className="query-box"><textarea value={query} maxLength={160} onChange={(e) => setQuery(e.target.value)} placeholder="钟楼 · 两小时 · 想吃热面" /><div className="query-footer"><span>{query.length}/160</span><button className="btn btn-primary btn-small" onClick={() => generatePlan(query || '钟楼附近 · 2 小时 · 3 种小吃')} disabled={isGenerating}><Icon icon={isGenerating ? 'mingcute:loading-3-line' : 'mingcute:sparkles-2-line'} width="18" height="18" />{isGenerating ? '整理中' : '落笔成行'}</button></div></div><div className="preset-row"><span>一念：</span><button onClick={() => generatePlan('钟楼附近 · 2 小时 · 3 种小吃')}>钟楼听钟</button><button onClick={() => generatePlan('想找巷子里的油泼面 · 人均 30')}>巷里热面</button><button onClick={() => generatePlan('低预算 · 适合外带 · 不去连锁店')}>轻装寻味</button></div></div>
-          <div className="map-panel card"><div className="map-top"><div><span className="kicker">A WALK THROUGH FLAVOR</span><h3>{plan ? plan.title : '一条还没落笔的路线'}</h3></div><IconButton icon="mingcute:more-2-line" label="更多路线选项" /></div><div className="route-canvas"><TianDiMap stops={plan ? plan.stops : places} /></div><div className="map-footer"><span><Icon icon="mingcute:time-line" width="17" height="17" />{plan ? plan.durationMin >= 120 ? `${Math.round(plan.durationMin / 60)} 小时` : `${plan.durationMin} 分钟` : '2 小时'}</span><span><Icon icon="mingcute:wallet-line" width="17" height="17" />{plan ? `约 ¥${plan.budgetRange[1]}` : '约 ¥126'}</span><button className="btn-text" onClick={() => setShowSources(true)}>查看来源 <Icon icon="mingcute:arrow-right-up-line" width="16" height="16" />来源</button></div></div>
+          <div className={`agent-panel card ${exploreFlash ? 'card-flash' : ''}`} data-reveal><div className="panel-top"><span className="panel-number">02</span><span className="status-chip"><i />资料已载入</span></div><h3>写下你的寻味条件</h3><p className="panel-copy">一念所向，皆可入巷。</p><div className="query-box"><textarea value={query} maxLength={160} onChange={(e) => setQuery(e.target.value)} placeholder="钟楼 · 两小时 · 想吃热面" /><div className="query-footer"><span>{query.length}/160</span><button className="btn btn-primary btn-small" onClick={() => generatePlan(query || '钟楼附近 · 2 小时 · 3 种小吃')} disabled={isGenerating}><Icon icon={isGenerating ? 'mingcute:loading-3-line' : 'mingcute:sparkles-2-line'} width="18" height="18" />{isGenerating ? '整理中' : '落笔成行'}</button></div></div><div className="preset-row"><span>一念：</span><button onClick={() => generatePlan('钟楼附近 · 2 小时 · 3 种小吃')}>钟楼听钟</button><button onClick={() => generatePlan('想找巷子里的油泼面 · 人均 30')}>巷里热面</button><button onClick={() => generatePlan('低预算 · 适合外带 · 不去连锁店')}>轻装寻味</button></div></div>
+          <div className="map-panel card" data-reveal style={{ '--reveal-delay': '120ms' }}><div className="map-top"><div><span className="kicker">循味成行</span><h3>{plan ? plan.title : '一条还没落笔的路线'}</h3></div><IconButton icon="mingcute:more-2-line" label="更多路线选项" /></div><div className="route-canvas"><TianDiMap stops={plan ? plan.stops : places} onOpenDish={(dishName) => setDetailDish(dishes.find((dish) => dish.name.includes(dishName)) || dishes[0])} /></div><div className="map-footer"><span><Icon icon="mingcute:time-line" width="17" height="17" />{plan ? plan.durationMin >= 120 ? `${Math.round(plan.durationMin / 60)} 小时` : `${plan.durationMin} 分钟` : '2 小时'}</span><span><Icon icon="mingcute:wallet-line" width="17" height="17" />{plan ? `约 ¥${plan.budgetRange[1]}` : '约 ¥126'}</span><button className="btn-text" onClick={() => setShowSources(true)}>查看来源 <Icon icon="mingcute:arrow-right-up-line" width="16" height="16" /></button></div></div>
         </div>
       </section>
 
       <section id="plan" className="plan-section section-wrap">
         <SectionRule />
-        <div className="section-heading"><div><div className="kicker">巷陌札记</div><h2>沿街拾味</h2></div><p>一味一巷，皆有来处。</p></div>
-        <div className="field-grid">{places.map((place, index) => <article key={place.id} className="field-card"><div className="field-number">0{index + 1}</div><div><span className="tag tag-jade">{place.type}</span><span className="tag tag-gold" style={{ marginLeft: 6 }}>演示数据</span><h3>{place.name}</h3><p>{place.area} · {place.dish}</p><div className="field-data"><span><Icon icon="mingcute:map-pin-line" width="16" height="16" />{place.distance}</span><span><Icon icon="mingcute:star-line" width="16" height="16" />{place.score}</span><span><Icon icon="mingcute:wallet-line" width="16" height="16" />{place.price}</span></div></div><button className="field-arrow" onClick={() => setDetailDish(dishes.find((dish) => dish.name.includes(place.dish.split(' / ')[0])) || dishes[0])} aria-label={`查看${place.name}`}><Icon icon="mingcute:arrow-right-up-line" width="20" height="20" /></button></article>)}</div>
+        <div className="section-heading" data-reveal><div><div className="kicker">巷陌札记</div><h2>沿街拾味</h2></div><p>一味一巷，皆有来处。</p></div>
+        <div className="field-toolbar"><span>店铺资料</span><button className="btn-text" onClick={requestLocation}><Icon icon="mingcute:location-line" width="16" height="16" />{locationState === 'loading' ? '定位中' : locationState === 'ready' ? '已更新距离' : '开启定位'}</button></div><div className="field-grid">{places.slice(0, 3).map((place, index) => <article key={place.id} className="field-card" data-reveal style={{ '--reveal-delay': `${index * 80}ms` }} role="button" tabIndex={0} onClick={() => setDetailPlace(place)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setDetailPlace(place) } }}><div className="field-number">0{index + 1}</div><div><span className="tag tag-jade">{place.type}</span><h3>{place.name}</h3><p>{place.area} · {place.dish}</p><div className="field-data"><span><Icon icon="mingcute:map-pin-line" width="16" height="16" />{distanceTo(place) ? `距离 ${distanceTo(place)} km` : '定位后显示距离'}</span>{place.score && <span><Icon icon="mingcute:star-line" width="16" height="16" />喜爱值 {place.score}</span>}<span><Icon icon="mingcute:wallet-line" width="16" height="16" />{place.averagePrice || place.price}</span></div></div><span className="field-arrow" aria-hidden="true"><Icon icon="mingcute:arrow-right-up-line" width="20" height="20" /></span></article>)}</div>
+        <div className="dish-more" data-reveal><button className="btn btn-ghost" onClick={openPlaces}><Icon icon="mingcute:store-line" width="18" height="18" />查看更多 · 全部店铺</button></div>
+      </section>
+
+      <section id="atlas" className="atlas-section section-wrap">
+        <SectionRule />
+        <div className="section-heading" data-reveal><div><div className="kicker">长安八味</div><h2>八味入长安</h2></div><p>一城八味，皆是长安烟火。</p></div>
+        <div className="dish-grid">{filteredDishes.map((dish, index) => <article key={dish.id} className={`dish-card card ${selectedDish.id === dish.id ? 'is-selected' : ''}`} data-reveal style={{ '--reveal-delay': `${(index % 4) * 90}ms` }} onClick={() => { setSelectedDish(dish); setDetailDish(dish) }}><div className="dish-card-top"><span className="dish-index">0{index + 1}</span><span className="dish-category">{dish.category}</span></div><div className="mini-canvas"><FoodImage dish={dish} compact /></div><div className="dish-info"><div><h3>{dish.name}</h3><p>{dish.note}</p>{dish.score && <span className="dish-score"><Icon icon="mingcute:star-line" width="13" height="13" />喜爱值 {dish.score}</span>}</div><Icon icon="mingcute:arrow-right-up-line" width="20" height="20" /></div><div className="dish-tags">{dish.tags.map((tag) => <span key={tag} className="tag tag-gold">{tag}</span>)}</div></article>)}</div>
+        <div className="dish-more" data-reveal><button className="btn btn-ghost" onClick={openCollection}><Icon icon="mingcute:book-6-line" width="18" height="18" />查看更多 · 打开收集册</button></div>
       </section>
     </main>
+    )}
 
-    <footer className="site-footer section-wrap"><div className="footer-rule"><span /><BrandMark compact /><span /></div><div className="footer-main"><div><div className="kicker">食游图鉴</div><h2>一味一巷，记住长安。</h2></div><p>烟火有迹，风味有名。</p></div><div className="footer-bottom"><span>长安食游图鉴 · 西安</span><span>演示章</span></div></footer>
+    <footer className="site-footer section-wrap" data-reveal><div className="footer-rule"><span /><i className="footer-motif" aria-hidden="true" /><span /></div><div className="footer-main"><div><div className="kicker">食游图鉴</div><h2>一味一巷，记住长安。</h2></div><p>烟火有迹，风味有名。</p></div><div className="footer-source"><Icon icon="mingcute:file-check-line" width="16" height="16" /><span>数据来源：游陕西小程序 · 用户提供榜单与店铺截图</span></div></footer>
 
-    {detailDish && <div className="modal-backdrop" onClick={() => setDetailDish(null)}><div className="detail-modal" onClick={(e) => e.stopPropagation()}><button className="modal-close" onClick={() => setDetailDish(null)} aria-label="关闭"><Icon icon="mingcute:close-line" width="22" height="22" /></button><div className="detail-visual"><DishCanvas dish={detailDish} /></div><div className="detail-body"><div className="kicker">味之笺</div><h2>{detailDish.name}</h2><p className="detail-note">{detailDish.note}</p><div className="detail-tags">{detailDish.tags.map((tag) => <span key={tag} className="tag tag-gold">{tag}</span>)}</div><div className="detail-block"><h4>一味小史</h4><p>{detailDish.history}</p></div><div className="detail-block"><h4>食材拆解</h4><div className="ingredient-list">{detailDish.ingredients.map((ingredient) => <span key={ingredient}><i />{ingredient}</span>)}</div></div><div className="detail-block"><h4>附近怎么吃</h4><p>关联 {detailDish.locations} 个地点 · 当前公开价格 {detailDish.price}</p></div><button className="btn btn-primary" onClick={() => { setDetailDish(null); document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' }); setQuery(`想找适合吃${detailDish.name}的真实地点`) }}><Icon icon="mingcute:compass-line" width="20" height="20" />寻找这道味道</button></div></div></div>}
-    {showSources && <div className="modal-backdrop" onClick={() => setShowSources(false)}><div className="source-modal" onClick={(e) => e.stopPropagation()}><button className="modal-close" onClick={() => setShowSources(false)} aria-label="关闭"><Icon icon="mingcute:close-line" width="22" height="22" /></button><div className="kicker">来源札记</div><h2>一味一证</h2><p>每一条味道，都有来处。</p><div className="source-list">{sources.slice(0, 5).map((source) => <div key={source.id}><Icon icon={source.kind === 'map_poi' ? 'mingcute:map-pin-line' : 'mingcute:file-line'} width="20" height="20" /><span><b>{source.title}</b><small>{source.note}</small></span><em>{source.verification === 'demo' ? '演示资料' : source.verification}</em></div>)}</div></div></div>}
+    {detailDish && <Modal onClose={() => setDetailDish(null)} className="detail-modal" label={`${detailDish.name}详情`}><div className="detail-visual"><FoodImage dish={detailDish} /></div><div className="detail-body"><div className="kicker">味之笺</div><h2>{detailDish.name}</h2><p className="detail-note">{detailDish.note}</p><div className="detail-tags">{detailDish.tags.map((tag) => <span key={tag} className="tag tag-gold">{tag}</span>)}</div><div className="detail-block"><h4>一味小史</h4><p>{detailDish.history}</p></div><PreparationPanel dish={detailDish} /><div className="detail-block"><h4>附近怎么吃</h4><p>可在店铺资料中查找这道味道 · 价格以游陕西页面为准</p></div><button className="btn btn-primary" onClick={() => { setDetailDish(null); document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' }); setQuery(`想找适合吃${detailDish.name}的真实地点`) }}><Icon icon="mingcute:compass-line" width="20" height="20" />寻找这道味道</button></div></Modal>}
+    {detailPlace && <Modal onClose={() => setDetailPlace(null)} className="place-modal" label={`${detailPlace.name}门店详情`}><div className="place-modal-hero"><div className="place-cover"><BrandMark compact /><span>{detailPlace.cuisine}</span></div><div className="place-title"><span className="kicker">门店食单</span><h2>{detailPlace.name}</h2><p>{detailPlace.area}</p></div></div><div className="place-modal-body"><div className="place-facts"><div><b>人均</b><span>{detailPlace.averagePrice}</span></div><div><b>菜系</b><span>{detailPlace.cuisine}</span></div><div><b>营业时间</b><span>{detailPlace.openingHours}</span></div></div><div className="place-info-row"><Icon icon="mingcute:fork-knife-line" width="21" height="21" /><span>{detailPlace.services?.join(' · ') || '堂食服务 · 特色推荐 · 交通指南'}</span></div><div className="place-info-row"><Icon icon="mingcute:map-pin-line" width="21" height="21" /><span>{detailPlace.address}</span><small>{distanceTo(detailPlace) ? `${distanceTo(detailPlace)} km` : '开启定位查看距离'}</small></div><div className="place-chip-row"><b>标签</b>{detailPlace.tags.map((tag) => <span key={tag} className="place-chip">{tag}</span>)}</div><div className="place-chip-row"><b>收录</b>{detailPlace.collections.map((item) => <span key={item} className="place-chip place-chip-source">{item}</span>)}</div><section className="place-intro"><h3>饭店简介</h3><p>{detailPlace.intro}</p></section><section className="place-menu"><div className="place-menu-heading"><h3>推荐菜单</h3><span>{detailPlace.menu.length} 道</span></div><div className="place-menu-grid">{detailPlace.menu.map((item) => { const linkedDish = item.dishId ? dishes.find((dish) => dish.id === item.dishId) : null; return <button key={item.name} className="place-menu-item" onClick={() => { if (linkedDish) { setDetailPlace(null); setDetailDish(linkedDish) } }} disabled={!linkedDish}><span className="place-menu-art"><Icon icon={linkedDish ? 'mingcute:bowl-line' : 'mingcute:fork-knife-line'} width="25" height="25" /></span><span><b>{item.name}</b><small>{item.note}{!linkedDish ? ' · 价格以门店为准' : ''}</small></span><Icon icon="mingcute:arrow-right-up-line" width="17" height="17" /></button> })}</div></section><p className="place-source-note">店铺信息参考游陕西小程序。</p></div></Modal>}
+    {showSources && <Modal onClose={() => setShowSources(false)} className="source-modal" label="来源札记"><div className="kicker">来源札记</div><h2>一味一证</h2><p>每一条味道，都有来处。</p><div className="source-list">{sources.map((source) => <div key={source.id}><Icon icon={source.kind === 'place' ? 'mingcute:map-pin-line' : 'mingcute:file-line'} width="20" height="20" /><span><b>{source.title}</b><small>{source.note}</small></span><em>{source.verification}</em></div>)}</div></Modal>}
+    <BackToTop onReset={() => setRevealSeed((v) => v + 1)} onHome={view !== 'home' ? () => { setView('home'); window.scrollTo(0, 0) } : undefined} />
   </div>
 }
 
