@@ -10,6 +10,23 @@ import { buildRoute } from './services/routeApi.js'
 // Keep the icon set local so the demo remains complete when the venue network is unavailable.
 addCollection(mingcuteIcons)
 
+const FOOD_IMAGE_BASE = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt='
+const FOOD_IMAGE_SIZE = '&image_size=landscape_4_3'
+
+// Prompts synchronized with the user's updated xian-food-map.html. Existing
+// atlas dishes use these first so the same food imagery appears in both pages.
+const HTML_FOOD_PROMPTS = {
+  roujiamo: '正宗西安腊汁肉夹馍特写，白吉馍酥脆金黄，腊汁肉肥瘦相间油润多汁，深色木质案板背景，暖光美食摄影，构图精致',
+  paomo: '西安羊肉泡馍，青瓷碗中羊肉粉丝浓汤与掰碎的馍块，配糖蒜和辣子酱，热气腾腾，暖色调美食摄影',
+  zenggao: '西安甑糕，糯米红枣芸豆蒸糕切块，色泽红润蜜甜，盛在白瓷盘中，热气袅袅，美食摄影特写',
+  'shizi-bing': '西安黄桂柿子饼，金黄酥脆的油炸柿子饼堆叠，表面油亮，油锅旁烟火气，暖色美食摄影',
+  'rouwan-hulatang': '西安肉丸胡辣汤，浓稠麻辣汤中牛肉丸、土豆、莲花白、木耳，洒红油辣子，粗瓷碗，早晨小吃摊暖光特写',
+  'youpo-mian': '西安油泼面，宽面配豆芽青菜，热油泼辣椒面与蒜末，红油锃亮，白瓷大碗，面馆暖光特写美食摄影',
+  'biangbiang-mian': '西安biangbiang面，超宽手扯面卷在粗陶碗中，浇油泼辣子与葱花，关中面馆暖光美食摄影',
+  huluji: '陕西名菜葫芦鸡，整鸡金黄酥脆形似葫芦立于盘中，配椒盐小碟，宴席摆盘暖光美食摄影',
+  'qiaomian-heluo': '西安荞面饸饹，深褐色荞麦面条泡在酸汤中，配羊肉丁豆腐丁与香菜葱花，粗瓷碗，陕西小吃暖光美食摄影',
+}
+
 function IconButton({ icon, label, onClick, active = false }) {
   return <button className={`icon-btn ${active ? 'is-active' : ''}`} aria-label={label} title={label} onClick={onClick}><Icon icon={icon} width="20" height="20" /></button>
 }
@@ -77,9 +94,40 @@ function FlatDishVisual({ dish, compact = false }) {
   </div>
 }
 
+// Wikimedia Commons public image candidates. The first available image is used;
+// this keeps the atlas independent from the unavailable text-to-image endpoint.
+const FOOD_IMAGE_SOURCES = {
+  roujiamo: ['https://commons.wikimedia.org/wiki/Special:FilePath/Roujiamo.jpg?width=960', 'https://commons.wikimedia.org/wiki/Special:FilePath/肉夹馍.jpg?width=960'],
+  liangpi: ['https://commons.wikimedia.org/wiki/Special:FilePath/Liangpi.jpg?width=960', 'https://commons.wikimedia.org/wiki/Special:FilePath/凉皮.jpg?width=960'],
+  paomo: ['https://commons.wikimedia.org/wiki/Special:FilePath/Yangrou%20paomo.jpg?width=960', 'https://commons.wikimedia.org/wiki/Special:FilePath/羊肉泡馍.jpg?width=960'],
+  zenggao: ['https://commons.wikimedia.org/wiki/Special:FilePath/Zenggao.jpg?width=960', 'https://commons.wikimedia.org/wiki/Special:FilePath/甑糕.jpg?width=960'],
+  'shui-pen-yang-rou': ['https://commons.wikimedia.org/wiki/Special:FilePath/Yangrou%20soup.jpg?width=960', 'https://commons.wikimedia.org/wiki/Special:FilePath/水盆羊肉.jpg?width=960'],
+  'qishan-saozimian': ['https://commons.wikimedia.org/wiki/Special:FilePath/Saozi%20mian.jpg?width=960', 'https://commons.wikimedia.org/wiki/Special:FilePath/臊子面.jpg?width=960'],
+  guokui: ['https://commons.wikimedia.org/wiki/Special:FilePath/Guokui.jpg?width=960', 'https://commons.wikimedia.org/wiki/Special:FilePath/锅盔.jpg?width=960'],
+  'qianxian-doufuna': ['https://commons.wikimedia.org/wiki/Special:FilePath/Doufunao.jpg?width=960', 'https://commons.wikimedia.org/wiki/Special:FilePath/豆腐脑.jpg?width=960'],
+  'youpo-mian': ['https://commons.wikimedia.org/wiki/Special:FilePath/Youpo%20mian.jpg?width=960', 'https://commons.wikimedia.org/wiki/Special:FilePath/油泼面.jpg?width=960'],
+  'biangbiang-mian': ['https://commons.wikimedia.org/wiki/Special:FilePath/Biangbiang%20mian.jpg?width=960', 'https://commons.wikimedia.org/wiki/Special:FilePath/Biangbiang%20noodles.jpg?width=960'],
+  huluji: ['https://commons.wikimedia.org/wiki/Special:FilePath/Huluji.jpg?width=960', 'https://commons.wikimedia.org/wiki/Special:FilePath/葫芦鸡.jpg?width=960'],
+  'rouwan-hulatang': ['https://commons.wikimedia.org/wiki/Special:FilePath/Rou%20wan%20hu%20la%20tang.jpg?width=960', 'https://commons.wikimedia.org/wiki/Special:FilePath/胡辣汤.jpg?width=960'],
+  'shizi-bing': ['https://commons.wikimedia.org/wiki/Special:FilePath/Persimmon%20cake.jpg?width=960', 'https://commons.wikimedia.org/wiki/Special:FilePath/柿子饼.jpg?width=960'],
+  'qiaomian-heluo': ['https://commons.wikimedia.org/wiki/Special:FilePath/Heluo.jpg?width=960', 'https://commons.wikimedia.org/wiki/Special:FilePath/饸饹.jpg?width=960'],
+}
+
 function FoodImage({ dish, compact = false }) {
-  return <div className={`food-image-frame ${compact ? 'is-compact' : ''}`}>
-    <FlatDishVisual dish={dish} compact={compact} />
+  const prompt = HTML_FOOD_PROMPTS[dish?.id] || dish?.imagePrompt
+  const generatedImage = prompt ? `${FOOD_IMAGE_BASE}${encodeURIComponent(prompt)}${FOOD_IMAGE_SIZE}` : ''
+  const candidates = [generatedImage, ...(FOOD_IMAGE_SOURCES[dish?.id] || [])].filter(Boolean)
+  const [sourceIndex, setSourceIndex] = useState(0)
+  const [failed, setFailed] = useState(false)
+  useEffect(() => { setSourceIndex(0); setFailed(false) }, [dish?.id])
+  const imageUrl = candidates[sourceIndex]
+  return <div className={`food-image-frame ${compact ? 'is-compact' : ''} ${failed ? 'is-fallback' : ''}`}>
+    {!failed && imageUrl && <img className="is-loaded" src={imageUrl} alt={`${dish?.name || '菜品'}图片`} loading={compact ? 'lazy' : 'eager'} onError={() => {
+      if (sourceIndex + 1 < candidates.length) setSourceIndex((current) => current + 1)
+      else setFailed(true)
+    }} />}
+    {failed && <div className="food-image-fallback"><strong>{dish?.name || '菜品图片'}</strong><span>公开图片资料待补充</span></div>}
+
   </div>
 }
 
@@ -468,10 +516,14 @@ function App() {
     </main>
     )}
 
-    <footer className="site-footer section-wrap" data-reveal><div className="footer-rule"><span /><i className="footer-motif" aria-hidden="true" /><span /></div><div className="footer-main"><div><div className="kicker">食游图鉴</div><h2>一味一巷，记住长安。</h2></div><p>烟火有迹，风味有名。</p></div><div className="footer-source"><Icon icon="mingcute:file-check-line" width="16" height="16" /><span>数据来源：游陕西小程序 · 用户提供榜单与店铺截图</span></div></footer>
+    <footer className="site-footer section-wrap" data-reveal><div className="footer-rule"><span /><i className="footer-motif" aria-hidden="true" /><span /></div><div className="footer-main"><div><div className="kicker">食游图鉴</div><h2>一味一巷，记住长安。</h2></div><p>烟火有迹，风味有名。</p></div>
+    {/* <div className="footer-source">
+      <Icon icon="mingcute:file-check-line" width="16" height="16" /><span>数据来源：游陕西小程序</span>
+      </div> */}
+      <div className="footer-credits"><span className="footer-team">长安·Hackers</span><a className="footer-hackathon" href="https://xihack.com" target="_blank" rel="noreferrer"><img src="/brand/xihack-logo.png" alt="西客松 Shaanxi Hackathon" /></a></div><div className="footer-copy">© 2026 长安·Hackers · 长安食游图鉴</div></footer>
 
     {detailDish && <Modal onClose={() => setDetailDish(null)} className="detail-modal" label={`${detailDish.name}详情`}><div className="detail-visual"><FoodImage dish={detailDish} /></div><div className="detail-body"><div className="kicker">味之笺</div><h2>{detailDish.name}</h2><p className="detail-note">{detailDish.note}</p><div className="detail-tags">{detailDish.tags.map((tag) => <span key={tag} className="tag tag-gold">{tag}</span>)}</div><div className="detail-block"><h4>一味小史</h4><p>{detailDish.history}</p><HistorySourceNote dish={detailDish} /></div><PreparationPanel dish={detailDish} /><div className="detail-block"><h4>附近怎么吃</h4><p>可在店铺资料中查找这道味道 · 价格以游陕西页面为准</p></div><button className="btn btn-primary" onClick={() => { setDetailDish(null); document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' }); setQuery(`想找适合吃${detailDish.name}的真实地点`) }}><Icon icon="mingcute:compass-line" width="20" height="20" />寻找这道味道</button></div></Modal>}
-    {detailPlace && <Modal onClose={() => setDetailPlace(null)} className="place-modal" label={`${detailPlace.name}门店详情`}><div className="place-modal-hero"><div className="place-cover"><BrandMark compact /><span>{detailPlace.cuisine}</span></div><div className="place-title"><span className="kicker">门店食单</span><h2>{detailPlace.name}</h2><p>{detailPlace.area}</p></div></div><div className="place-modal-body"><div className="place-facts"><div><b>人均</b><span>{detailPlace.averagePrice}</span></div><div><b>菜系</b><span>{detailPlace.cuisine}</span></div><div><b>营业时间</b><span>{detailPlace.openingHours}</span></div></div><div className="place-info-row"><Icon icon="mingcute:fork-knife-line" width="21" height="21" /><span>{detailPlace.services?.join(' · ') || '堂食服务 · 特色推荐 · 交通指南'}</span></div><div className="place-info-row"><Icon icon="mingcute:map-pin-line" width="21" height="21" /><span>{detailPlace.address}</span><small>{distanceTo(detailPlace) ? `${distanceTo(detailPlace)} km` : '开启定位查看距离'}</small></div><div className="place-chip-row"><b>标签</b>{detailPlace.tags.map((tag) => <span key={tag} className="place-chip">{tag}</span>)}</div><div className="place-chip-row"><b>收录</b>{detailPlace.collections.map((item) => <span key={item} className="place-chip place-chip-source">{item}</span>)}</div><section className="place-intro"><h3>饭店简介</h3><p>{detailPlace.intro}</p></section><section className="place-menu"><div className="place-menu-heading"><h3>推荐菜单</h3><span>{detailPlace.menu.length} 道</span></div><div className="place-menu-grid">{detailPlace.menu.map((item) => { const linkedDish = item.dishId ? dishes.find((dish) => dish.id === item.dishId) : null; return <button key={item.name} className="place-menu-item" onClick={() => { if (linkedDish) { setDetailPlace(null); setDetailDish(linkedDish) } }} disabled={!linkedDish}><span className="place-menu-art"><Icon icon={linkedDish ? 'mingcute:bowl-line' : 'mingcute:fork-knife-line'} width="25" height="25" /></span><span><b>{item.name}</b><small>{item.note}{!linkedDish ? ' · 价格以门店为准' : ''}</small></span><Icon icon="mingcute:arrow-right-up-line" width="17" height="17" /></button> })}</div></section><p className="place-source-note">店铺信息参考游陕西小程序。</p></div></Modal>}
+    {detailPlace && <Modal onClose={() => setDetailPlace(null)} className="place-modal" label={`${detailPlace.name}门店详情`}><div className="place-modal-hero"><div className="place-cover"><BrandMark compact /><span>{detailPlace.cuisine}</span></div><div className="place-title"><span className="kicker">门店食单</span><h2>{detailPlace.name}</h2><p>{detailPlace.area}</p></div></div><div className="place-modal-body"><div className="place-facts"><div><b>人均</b><span>{detailPlace.averagePrice}</span></div><div><b>菜系</b><span>{detailPlace.cuisine}</span></div><div><b>营业时间</b><span>{detailPlace.openingHours}</span></div></div><div className="place-info-row"><Icon icon="mingcute:fork-knife-line" width="21" height="21" /><span>{detailPlace.services?.join(' · ') || '堂食服务 · 特色推荐 · 交通指南'}</span></div><div className="place-info-row"><Icon icon="mingcute:map-pin-line" width="21" height="21" /><span>{detailPlace.address}</span><small>{distanceTo(detailPlace) ? `${distanceTo(detailPlace)} km` : '开启定位查看距离'}</small></div><div className="place-chip-row"><b>标签</b>{detailPlace.tags.map((tag) => <span key={tag} className="place-chip">{tag}</span>)}</div><div className="place-chip-row"><b>收录</b>{detailPlace.collections.map((item) => <span key={item} className="place-chip place-chip-source">{item}</span>)}</div><section className="place-intro"><h3>饭店简介</h3><p>{detailPlace.intro}</p></section><section className="place-menu"><div className="place-menu-heading"><h3>推荐菜单</h3><span>{detailPlace.menu.length} 道</span></div><div className="place-menu-grid">{detailPlace.menu.map((item) => { const linkedDish = item.dishId ? dishes.find((dish) => dish.id === item.dishId) : null; return <button key={item.name} className="place-menu-item" onClick={() => { if (linkedDish) { setDetailPlace(null); setDetailDish(linkedDish) } }} disabled={!linkedDish}><span className="place-menu-art"><Icon icon={linkedDish ? 'mingcute:bowl-line' : 'mingcute:fork-knife-line'} width="25" height="25" /></span><span><b>{item.name}</b><small>{item.note}{!linkedDish ? ' · 价格以门店为准' : ''}</small></span><Icon icon="mingcute:arrow-right-up-line" width="17" height="17" /></button> })}</div></section><p className="place-source-note">店铺信息来自游陕西小程序。</p></div></Modal>}
     {showSources && <Modal onClose={() => setShowSources(false)} className="source-modal" label="来源札记"><div className="kicker">来源札记</div><h2>一味一证</h2><p>每一条味道，都有来处。</p><div className="source-list">{sources.map((source) => <div key={source.id}><Icon icon={source.kind === 'place' ? 'mingcute:map-pin-line' : 'mingcute:file-line'} width="20" height="20" /><span><b>{source.title}</b><small>{source.note}</small></span><em>{source.verification}</em></div>)}</div></Modal>}
     <BackToTop onReset={() => setRevealSeed((v) => v + 1)} onHome={view !== 'home' ? () => { setView('home'); window.scrollTo(0, 0) } : undefined} />
   </div>

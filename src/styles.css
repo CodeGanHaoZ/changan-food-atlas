@@ -417,6 +417,11 @@ button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px sol
 .food-image-frame > .flat-dish-visual { position: absolute; inset: 0; }
 .food-image-frame > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity var(--dur-base) var(--ease-out); }
 .food-image-frame > img.is-loaded { opacity: 1; }
+.food-image-frame.is-fallback { display: grid; place-items: center; background: var(--ink-200); }
+.food-image-fallback { display: grid; max-width: 80%; gap: 6px; place-items: center; padding: 18px; border: var(--border-hairline); color: var(--paper-100); text-align: center; background: rgba(5, 8, 7, .38); }
+.food-image-fallback strong { color: var(--gold-500); font-family: var(--font-serif); font-size: 21px; font-weight: 600; }
+.food-image-fallback span { color: var(--paper-500); font-size: 11px; }
+.food-image-credit { position: absolute; right: 10px; bottom: 10px; z-index: 2; padding: 3px 7px; border: var(--border-hairline); color: var(--paper-100); background: rgba(5, 8, 7, .62); font-size: 9px; letter-spacing: .04em; pointer-events: none; }
 .food-image-frame.is-compact { min-height: 0; }
 .food-image-frame.is-compact > img { border-radius: 3px; }
 .stage-ingredients, .stage-steps { display: flex; align-items: center; gap: 12px; margin: 0 28px; padding: 13px 0; border-top: var(--border-hairline); }
@@ -438,8 +443,14 @@ button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px sol
 .dish-score { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; color: var(--gold-500); font-family: var(--font-mono); font-size: 10px; }
 .field-toolbar { display: flex; align-items: center; justify-content: space-between; margin: -12px 0 18px; color: var(--paper-500); font-size: 12px; }
 .field-toolbar .btn-text { font-size: 12px; }
-.footer-source { display: flex; align-items: flex-start; gap: 8px; padding: 14px 0; border-top: var(--border-hairline); color: var(--paper-500); font-size: 11px; line-height: 1.65; }
-.footer-source .iconify { flex: none; margin-top: 3px; color: var(--gold-600); }
+.footer-source { display: flex; align-items: center; gap: 8px; padding: 12px 0; border-top: var(--border-hairline); color: var(--paper-500); font-size: 11px; line-height: 1.65; }
+.footer-source .iconify { flex: none; color: var(--gold-600); }
+.footer-credits { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 20px; padding: 12px 0; border-top: var(--border-hairline); }
+.footer-team { font-family: var(--font-title); font-size: 14px; color: var(--gold-400); letter-spacing: 2px; }
+.footer-hackathon { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+.footer-hackathon img { height: 28px; width: auto; display: block; filter: brightness(1.15); }
+.footer-hackathon span { font-size: 11px; color: var(--paper-500); letter-spacing: 1px; }
+.footer-copy { text-align: center; padding: 4px 0 14px; color: var(--paper-500); font-size: 12px; letter-spacing: 2px; font-family: var(--font-title); }
 .place-modal { display: block; width: min(760px, 100%); max-height: min(780px, calc(100vh - 32px)); overflow: auto; }
 .place-modal-hero { display: grid; grid-template-columns: 150px 1fr; gap: 22px; align-items: center; padding: 28px; background: linear-gradient(135deg, rgba(181, 47, 53, .9), rgba(112, 37, 35, .86)); }
 .place-cover { display: grid; place-items: center; aspect-ratio: 1; border: var(--border-gold); background: rgba(5, 8, 7, .2); color: var(--paper-000); }
@@ -489,6 +500,9 @@ button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px sol
   .preparation-item { min-height: 0; }
   .field-toolbar { margin-top: -4px; }
   .footer-source { font-size: 10px; }
+  .footer-credits { gap: 8px 14px; padding: 10px 0; }
+  .footer-copy { padding-bottom: 8px; }
+  .site-footer { margin-bottom: -40px; }
   .place-modal-hero { grid-template-columns: 82px 1fr; gap: 14px; padding: 20px 18px; }
   .place-cover { min-height: 82px; }
   .place-cover .brand-mark { width: 38px; height: 38px; }
@@ -505,16 +519,19 @@ button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px sol
 
 /* Atlas cards use one stable horizontal rhythm so the image never covers text. */
 .dish-grid { grid-template-columns: 1fr; gap: 14px; }
-.dish-card { display: grid; grid-template-columns: 220px minmax(0, 1fr) 38px; grid-template-rows: auto 1fr auto; min-height: 220px; padding: 14px 18px; align-items: start; }
+.dish-card { display: grid; grid-template-columns: 220px minmax(0, 1fr); grid-template-rows: auto 1fr auto; min-height: 220px; padding: 14px 18px; align-items: start; }
 .dish-card-top { grid-column: 2; grid-row: 1; min-width: 0; }
 .mini-canvas { grid-column: 1; grid-row: 1 / span 3; width: 220px; height: 190px; margin: 0; overflow: hidden; }
-.dish-info { grid-column: 2; grid-row: 2; min-width: 0; align-self: center; padding: 8px 16px 0; }
+.dish-info { grid-column: 2; grid-row: 2; min-width: 0; align-self: center; padding: 8px 16px 0; width: 100%; }
 .dish-info h3, .dish-info p { overflow-wrap: anywhere; }
 .dish-info > .iconify { grid-column: 3; grid-row: 1 / span 3; align-self: center; margin-right: 2px; }
 .dish-tags { grid-column: 2; grid-row: 3; margin: 10px 16px 0; min-width: 0; }
 .food-image-frame.is-compact, .food-image-frame.is-compact > .flat-dish-visual { width: 100%; height: 100%; min-height: 0; }
 .food-image-frame.is-compact > img { width: 100%; height: 100%; object-fit: cover; }
 
+@media (min-width: 1081px) {
+  .dish-grid { grid-template-columns: repeat(2, 1fr); }
+}
 @media (min-width: 761px) {
   .dish-card { min-height: 248px; padding: 20px 24px; }
   .dish-card-top { padding: 0 24px 0 16px; }
@@ -527,7 +544,7 @@ button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px sol
 }
 
 @media (max-width: 760px) {
-  .dish-card { grid-template-columns: 112px minmax(0, 1fr) 24px; grid-template-rows: auto 1fr auto; min-height: 168px; padding: 12px; }
+  .dish-card { grid-template-columns: 112px minmax(0, 1fr); grid-template-rows: auto 1fr auto; min-height: 168px; padding: 12px; }
   .mini-canvas { width: 112px; height: 144px; }
   .dish-info { padding: 5px 8px 0; }
   .dish-info h3 { font-size: 20px; line-height: 1.25; }

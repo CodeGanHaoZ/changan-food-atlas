@@ -29,6 +29,7 @@ export const places = [
 export const sources = [
   { id: 'you-shaanxi-food-ranking', title: '游陕西小程序 · 陕西人气美食排行榜', kind: 'app', capturedAt: '用户提供截图', verification: '截图引用', note: '菜品名称、榜单分值与图片参考自用户提供的游陕西页面截图。' },
   { id: 'you-shaanxi-shops', title: '游陕西小程序 · 店铺榜单', kind: 'place', capturedAt: '用户提供截图', verification: '截图引用', note: '店铺名称、门店分店与展示图片参考自用户提供的店铺截图。' },
+  { id: 'wikimedia-food-images', title: 'Wikimedia Commons · 菜品公开图片', kind: 'image', capturedAt: '公开媒体库', verification: '直链候选', note: '图鉴优先加载 Wikimedia Commons 公开媒体库的菜品图片直链；图片版权与署名以原文件页说明为准。未收录或加载失败时不展示虚构图片。', url: 'https://commons.wikimedia.org/wiki/Main_Page' },
   { id: 'score-default', title: '展示规则 · 缺失评分默认值', kind: 'rule', capturedAt: '产品规则', verification: '展示规则', note: '游陕西截图未显示评分的菜品统一展示 90.0，仅用于补齐图鉴排序与视觉呈现，不代表平台真实评分。' },
   { id: 'baike-roujiamo', title: '百度百科 · 肉夹馍', kind: 'history', capturedAt: '公开词条', verification: '百科参考', note: '历史与基本形制参考公开词条，页面内容已压缩为图鉴摘要。', url: 'https://baike.baidu.com/item/%E8%82%89%E5%A4%B9%E9%A6%8D' },
   { id: 'baike-liangpi', title: '百度百科 · 凉皮', kind: 'history', capturedAt: '公开词条', verification: '百科参考', note: '地域与制作概述参考公开词条，页面内容已压缩为图鉴摘要。', url: 'https://baike.baidu.com/item/%E5%87%89%E7%9A%AE' },
